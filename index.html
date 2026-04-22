@@ -19,19 +19,16 @@
   header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:32px; flex-wrap:wrap; gap:20px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
   .logo-area h1 { font-family:'Syne',sans-serif; font-size:24px; font-weight:800; }
   .logo-area h1 span { color:var(--accent); }
-  
   #loading { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; gap:20px; }
   .spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
   @keyframes spin { to{transform:rotate(360deg)} }
   #content { display:none; animation:fadeIn .4s ease; }
   @keyframes fadeIn { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)} }
-
   .overview-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px; margin-bottom:28px; }
   .eng-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; cursor:pointer; transition:all .2s; position:relative; overflow: hidden; }
   .eng-card:hover { transform:translateY(-3px); background:var(--surface2); }
   .eng-card.active { border: 1px solid white; background: var(--surface2); }
   .eng-card-name { font-family:'Syne',sans-serif; font-size:15px; font-weight:800; margin-bottom:12px; }
-
   .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
   @media(max-width:700px){ .stats-grid { grid-template-columns:repeat(2,1fr); } }
   .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; position:relative; cursor:pointer; transition:all 0.2s; opacity: 0.5; }
@@ -42,20 +39,17 @@
   .stat-card.inprogress::after { background:var(--inprogress); }
   .stat-card.waiting::after { background:var(--waiting); }
   .stat-value { font-family:'Syne',sans-serif; font-size:42px; font-weight:800; line-height:1; margin-top: 10px; }
-
   .table-section { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
   .table-scroll { overflow-x: auto; }
   table { width:100%; border-collapse:collapse; font-size:12px; min-width: 850px; }
   th { padding:12px 16px; text-align:left; background:var(--surface2); color:var(--muted); text-transform:uppercase; font-size:10px; }
   td { padding:12px 16px; border-bottom:1px solid var(--border); }
-  
   .status-badge { display:inline-flex; align-items:center; gap:5px; padding:4px 12px; border-radius:100px; font-size:10px; font-weight:700; }
   .badge-closed { background:#00e5a015; color:var(--closed); border:1px solid #00e5a030; }
   .badge-new { background:#4d9fff15; color:var(--open); border:1px solid #4d9fff30; }
   .badge-inprogress { background:#f0b42915; color:var(--inprogress); border:1px solid #f0b42930; }
   .badge-waiting { background:#ff6b3515; color:var(--waiting); border:1px solid #ff6b3530; }
   .badge-unassigned { background:#ff00ff15; color:var(--unassigned); border:1px solid #ff00ff40; animation: pulse 2s infinite; }
-  
   @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
   .refresh-btn { background:var(--accent); border:none; color:#000; padding:10px 20px; border-radius:8px; cursor:pointer; font-family:'Syne',sans-serif; font-size:12px; font-weight:700; }
 </style>
@@ -74,9 +68,7 @@
 
   <div id="content">
     <div class="overview-grid" id="overview-grid"></div>
-
     <div style="font-family:Syne; font-size:18px; font-weight:800; margin-bottom:20px; color:var(--accent);" id="view-title">All Staff Overview</div>
-
     <div class="stats-grid">
       <div class="stat-card closed active-slice" id="btn-Closed" onclick="toggleSlice('Closed')">
         <small style="color:var(--muted)">RESOLVED</small>
@@ -95,7 +87,6 @@
         <div class="stat-value" id="count-waiting">0</div>
       </div>
     </div>
-
     <div class="table-section">
       <div class="table-scroll">
         <table>
@@ -117,11 +108,11 @@
 </div>
 
 <script>
-/**
- * REPLACED SCRIPT URL MAIN WITH YOUR NEW AUTHORIZED LINK
- */
-const SCRIPT_URL_MAIN = "https://script.google.com/macros/s/AKfycbzZf2mYckoDgOHFFImNzCiHY1U_IrFpvfK8g-aBlM76HTljX23EZqOXdIU_VF8wzY3D/exec";
-const SCRIPT_URL_NEW = "https://script.google.com/macros/s/AKfycbwcTd1Fm2G_NUocdxNtpHqXNmFkSTukJlCGLV00xAbrcbEJ_hL8OmthPFtBUbVJMH3W6w/exec";
+// ✅ SCRIPT 1 - New Form Responses Sheet
+const SCRIPT_URL_NEW = "https://script.google.com/macros/s/AKfycbwhXZk66AYH5KT1cxBt2qyAqNI93dhmvLvQ6WsXSe353ilBUj8-ivGskw6jSpWpDf0V/exec";
+
+// ✅ SCRIPT 2 - Main Service Ticket Sheet
+const SCRIPT_URL_MAIN = "https://script.google.com/macros/s/AKfycbw4ckrzt4KDHSJaEKx3ePWdPruJHh51BePCv2ZTkLPfrx3NgDG1BGr_qDxCHJs-5Fqi/exec";
 
 const ENGINEERS = [
   {name:"Shakeel", color:"#4d9fff"}, {name:"Sam", color:"#00e5a0"},
@@ -145,16 +136,13 @@ async function loadData() {
     ]);
     const data1 = await res1.json();
     const data2 = await res2.json();
-    
-    // Combine records from both spreadsheets
     allData = [...data1, ...data2];
-    
     document.getElementById('loading').style.display = 'none';
     document.getElementById('content').style.display = 'block';
     refreshUI();
-  } catch(e) { 
+  } catch(e) {
     console.error("Sync Error:", e);
-    alert("Sync Error: Please ensure both Google Scripts are deployed correctly to 'Anyone'."); 
+    alert("Sync Error: Please ensure both Google Scripts are deployed correctly to 'Anyone'.");
   }
   btn.style.opacity = '1';
 }
@@ -206,7 +194,6 @@ function selectEng(name) {
 function updateStats() {
   const tickets = currentEngineer === 'all' ? allData : allData.filter(r => getVal(r, 'Name').trim() === currentEngineer);
   const c = {closed:0, open:0, inprogress:0, waiting:0};
-  
   tickets.forEach(r => {
     const s = getVal(r, 'Current Status', 'Status').toLowerCase();
     if(s.includes('closed')) c.closed++;
@@ -214,7 +201,6 @@ function updateStats() {
     else if(s.includes('in progress')) c.inprogress++;
     else if(s.includes('waiting')) c.waiting++;
   });
-  
   document.getElementById('count-closed').innerText = c.closed;
   document.getElementById('count-open').innerText = c.open;
   document.getElementById('count-inprogress').innerText = c.inprogress;
@@ -235,7 +221,6 @@ function toggleSlice(status) {
 
 function renderTable() {
   let tickets = currentEngineer === 'all' ? allData : allData.filter(r => getVal(r, 'Name').trim() === currentEngineer);
-  
   if (selectedStatuses.length > 0) {
     tickets = tickets.filter(r => {
       const s = getVal(r, 'Current Status', 'Status').toLowerCase();
@@ -248,19 +233,16 @@ function renderTable() {
   } else {
     tickets = [];
   }
-
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = tickets.map((r, i) => {
     const nameVal = getVal(r, 'Name');
     const statusVal = getVal(r, 'Current Status', 'Status') || 'New';
     const isUnassigned = (nameVal === '');
-    
     let bc = 'badge-new';
     if(statusVal.toLowerCase().includes('closed')) bc = 'badge-closed';
     else if(statusVal.toLowerCase().includes('in progress')) bc = 'badge-inprogress';
     else if(statusVal.toLowerCase().includes('waiting')) bc = 'badge-waiting';
     if(isUnassigned) bc = 'badge-unassigned';
-
     return `<tr>
       <td>${i+1}</td>
       <td style="font-weight:700;">${nameVal || '<span style="color:var(--unassigned)">⚠ UNASSIGNED</span>'}</td>
