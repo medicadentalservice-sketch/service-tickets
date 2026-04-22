@@ -108,11 +108,8 @@
 </div>
 
 <script>
-// ✅ SCRIPT 1 - New Form Responses Sheet
-const SCRIPT_URL_NEW = "https://script.google.com/macros/s/AKfycbwhXZk66AYH5KT1cxBt2qyAqNI93dhmvLvQ6WsXSe353ilBUj8-ivGskw6jSpWpDf0V/exec";
-
-// ✅ SCRIPT 2 - Main Service Ticket Sheet
 const SCRIPT_URL_MAIN = "https://script.google.com/macros/s/AKfycbw4ckrzt4KDHSJaEKx3ePWdPruJHh51BePCv2ZTkLPfrx3NgDG1BGr_qDxCHJs-5Fqi/exec";
+const SCRIPT_URL_NEW  = "https://script.google.com/macros/s/AKfycbwhXZk66AYH5KT1cxBt2qyAqNI93dhmvLvQ6WsXSe353ilBUj8-ivGskw6jSpWpDf0V/exec";
 
 const ENGINEERS = [
   {name:"Shakeel", color:"#4d9fff"}, {name:"Sam", color:"#00e5a0"},
@@ -126,32 +123,53 @@ let selectedStatuses = ['Closed', 'New', 'In Progress', 'Waiting'];
 
 window.onload = () => loadData();
 
+// ✅ JSONP loader — bypasses CORS for Google Apps Script
+function fetchJSONP(url) {
+  return new Promise((resolve, reject) => {
+    const cbName = 'cb_' + Math.random().toString(36).substr(2, 9);
+    const script = document.createElement('script');
+    const timeout = setTimeout(() => {
+      delete window[cbName];
+      document.body.removeChild(script);
+      reject(new Error('Timeout'));
+    }, 10000);
+    window[cbName] = (data) => {
+      clearTimeout(timeout);
+      delete window[cbName];
+      document.body.removeChild(script);
+      resolve(data);
+    };
+    script.src = url + '?callback=' + cbName + '&t=' + Date.now();
+    script.onerror = () => {
+      clearTimeout(timeout);
+      delete window[cbName];
+      document.body.removeChild(script);
+      reject(new Error('Script error'));
+    };
+    document.body.appendChild(script);
+  });
+}
+
 async function loadData() {
   const btn = document.getElementById('rbtn');
   btn.style.opacity = '0.5';
   try {
-    const [res1, res2] = await Promise.all([
-      fetch(SCRIPT_URL_MAIN + "?t=" + Date.now()),
-      fetch(SCRIPT_URL_NEW + "?t=" + Date.now())
+    const [data1, data2] = await Promise.all([
+      fetchJSONP(SCRIPT_URL_MAIN),
+      fetchJSONP(SCRIPT_URL_NEW)
     ]);
-    const data1 = await res1.json();
-    const data2 = await res2.json();
     allData = [...data1, ...data2];
     document.getElementById('loading').style.display = 'none';
     document.getElementById('content').style.display = 'block';
     refreshUI();
   } catch(e) {
     console.error("Sync Error:", e);
-    alert("Sync Error: Please ensure both Google Scripts are deployed correctly to 'Anyone'.");
+    alert("Sync Error: " + e.message);
   }
   btn.style.opacity = '1';
 }
 
-function refreshUI() {
-  renderOverview();
-  updateStats();
-  renderTable();
-}
+function refreshUI() { renderOverview(); updateStats(); renderTable(); }
 
 function getVal(obj, ...keys) {
   for (let key of keys) {
@@ -230,9 +248,7 @@ function renderTable() {
         return s === status.toLowerCase();
       });
     });
-  } else {
-    tickets = [];
-  }
+  } else { tickets = []; }
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = tickets.map((r, i) => {
     const nameVal = getVal(r, 'Name');
