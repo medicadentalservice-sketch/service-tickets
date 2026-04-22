@@ -118,9 +118,9 @@
 
 <script>
 /**
- * DUAL SHEET DATA FETCHING
+ * REPLACED SCRIPT URL MAIN WITH YOUR NEW AUTHORIZED LINK
  */
-const SCRIPT_URL_MAIN = "https://script.google.com/macros/s/AKfycby-B6TgmKGnX86YQYebeTq8su6imILPqbLUi5XvbFmm-MIatK3qFPxG9RcqMf_fGabV/exec";
+const SCRIPT_URL_MAIN = "https://script.google.com/macros/s/AKfycbzZf2mYckoDgOHFFImNzCiHY1U_IrFpvfK8g-aBlM76HTljX23EZqOXdIU_VF8wzY3D/exec";
 const SCRIPT_URL_NEW = "https://script.google.com/macros/s/AKfycbwcTd1Fm2G_NUocdxNtpHqXNmFkSTukJlCGLV00xAbrcbEJ_hL8OmthPFtBUbVJMH3W6w/exec";
 
 const ENGINEERS = [
@@ -154,7 +154,7 @@ async function loadData() {
     refreshUI();
   } catch(e) { 
     console.error("Sync Error:", e);
-    alert("Sync Error: Please ensure both Google Scripts are deployed correctly."); 
+    alert("Sync Error: Please ensure both Google Scripts are deployed correctly to 'Anyone'."); 
   }
   btn.style.opacity = '1';
 }
