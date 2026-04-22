@@ -53,8 +53,10 @@
   @keyframes pulse { 0%{opacity:1}50%{opacity:0.6}100%{opacity:1} }
   .refresh-btn { background:var(--accent); border:none; color:#000; padding:10px 20px; border-radius:8px; cursor:pointer; font-family:'Syne',sans-serif; font-size:12px; font-weight:700; }
   .assign-wrap { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-  .assign-select { background:#1a0a1a; color:var(--unassigned); border:1px solid #ff00ff40; border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; outline:none; animation:pulse 2s infinite; }
-  .assign-btn { background:var(--unassigned); color:#000; border:none; border-radius:6px; padding:4px 10px; font-family:'Syne',sans-serif; font-size:10px; font-weight:800; cursor:pointer; transition:all .2s; }
+  .assign-select { background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; outline:none; }
+  .assign-select.unassigned { background:#1a0a1a; color:var(--unassigned); border:1px solid #ff00ff40; animation:pulse 2s infinite; }
+  .assign-btn { background:var(--unassigned); color:#000; border:none; border-radius:6px; padding:4px 10px; font-family:'Syne',sans-serif; font-size:10px; font-weight:800; cursor:pointer; transition:all .2s; white-space:nowrap; }
+  .assign-btn.reassign { background:var(--accent3); }
   .assign-btn:disabled { opacity:0.4; cursor:not-allowed; }
   .status-select { background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; outline:none; width:100%; }
   .status-select:hover { border-color:var(--accent); }
@@ -124,7 +126,6 @@
 <div id="toast"></div>
 
 <script>
-// ✅ ONE script only — Engineers Script
 const SCRIPT = "https://script.google.com/macros/s/AKfycbxpNWPofPEaUC8sX01slerzchcBTE98do2Mfu_X7gDJ5oKFcJRwS63KpsdSVR_bBKVN/exec";
 
 const ENGINEERS = [
@@ -183,11 +184,10 @@ async function loadData() {
   btn.innerText = '↻ Loading...';
   try {
     const data = await fetchJSONP(SCRIPT);
-    // Filter out completely empty rows
-    allData = data.filter(r => {
-      const ts = r['Timestamp'] || '';
-      return ts.toString().trim() !== '';
-    });
+    // Filter empty rows and sort newest first
+    allData = data
+      .filter(r => r['Timestamp'] && r['Timestamp'].toString().trim() !== '')
+      .sort((a, b) => new Date(b['Timestamp']) - new Date(a['Timestamp']));
     document.getElementById('loading').style.display = 'none';
     document.getElementById('content').style.display = 'block';
     refreshUI();
@@ -208,6 +208,10 @@ function getVal(obj, ...keys) {
   return "";
 }
 
+function getStatus(r) {
+  return getVal(r,'Current Status','Status') || 'New';
+}
+
 function calculateDuration(start, end) {
   const s = new Date(start);
   const e = end ? new Date(end) : new Date();
@@ -216,10 +220,6 @@ function calculateDuration(start, end) {
   const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffHrs / 24);
   return diffDays > 0 ? `${diffDays}d ${diffHrs % 24}h` : `${diffHrs}h`;
-}
-
-function getStatus(r) {
-  return getVal(r, 'Current Status', 'Status') || 'New';
 }
 
 function renderOverview() {
@@ -286,7 +286,7 @@ async function assignEngineer(realIndex, selectEl, btnEl) {
   } catch(e) {
     allData[realIndex]['Name'] = engineerName;
     allData[realIndex]['Current Status'] = 'In Progress';
-    showToast('⚠ Updated locally — sheet may not have saved', '#f0b429');
+    showToast('⚠ Updated locally only', '#f0b429');
   }
   refreshUI();
 }
@@ -303,7 +303,7 @@ async function updateStatus(realIndex, newStatus, selectEl) {
     showToast('✅ Status: ' + (newStatus === 'Waiting' ? 'Waiting for Spare Parts' : newStatus));
   } catch(e) {
     allData[realIndex]['Current Status'] = newStatus;
-    showToast('⚠ Updated locally — sheet may not have saved', '#f0b429');
+    showToast('⚠ Updated locally only', '#f0b429');
   }
   refreshUI();
 }
@@ -321,7 +321,7 @@ async function saveSpareParts(realIndex, inputEl, btnEl) {
     showToast('🔧 Spare parts saved!');
   } catch(e) {
     allData[realIndex]['_spareParts'] = parts;
-    showToast('⚠ Updated locally — sheet may not have saved', '#f0b429');
+    showToast('⚠ Updated locally only', '#f0b429');
   }
   refreshUI();
 }
@@ -358,24 +358,21 @@ function renderTable() {
     else if(statusVal.toLowerCase() === 'waiting') bc = 'badge-waiting';
     if(isUnassigned) bc = 'badge-unassigned';
 
-    const assigneeCell = isUnassigned
-      ? `<div class="assign-wrap">
-          <select class="assign-select" id="sel-${realIndex}">
-            <option value="">⚠ Assign to...</option>
-            ${ENGINEERS.map(e=>`<option value="${e.name}">${e.name}</option>`).join('')}
-          </select>
-          <button class="assign-btn" id="abtn-${realIndex}"
-            onclick="assignEngineer(${realIndex},document.getElementById('sel-${realIndex}'),document.getElementById('abtn-${realIndex}'))">
-            Assign ✓
-          </button>
-        </div>`
-      : `<span style="font-weight:700;color:${engColor}">${nameVal}</span>`;
+    // ✅ Assignee cell — works for both unassigned AND reassignment
+    const assigneeCell = `<div class="assign-wrap">
+      <select class="assign-select ${isUnassigned?'unassigned':''}" id="sel-${realIndex}">
+        <option value="">${isUnassigned ? '⚠ Assign to...' : '↺ Reassign...'}</option>
+        ${ENGINEERS.map(e=>`<option value="${e.name}" ${nameVal===e.name?'selected':''}>${e.name}</option>`).join('')}
+      </select>
+      <button class="assign-btn ${isUnassigned?'':'reassign'}" id="abtn-${realIndex}"
+        onclick="assignEngineer(${realIndex},document.getElementById('sel-${realIndex}'),document.getElementById('abtn-${realIndex}'))">
+        ${isUnassigned ? 'Assign ✓' : '↺'}
+      </button>
+    </div>`;
 
-    const statusCell = isUnassigned
-      ? `<span class="status-badge ${bc}">Awaiting Engineer</span>`
-      : `<select class="status-select" onchange="updateStatus(${realIndex},this.value,this)">
-          ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${statusVal===s?'selected':''}>${s==='Waiting'?'Waiting for Spare Parts':s}</option>`).join('')}
-        </select>`;
+    const statusCell = `<select class="status-select" onchange="updateStatus(${realIndex},this.value,this)">
+      ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${statusVal===s?'selected':''}>${s==='Waiting'?'Waiting for Spare Parts':s}</option>`).join('')}
+    </select>`;
 
     const spareCell = isWaiting
       ? `<div class="spare-wrap">
