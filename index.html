@@ -10,15 +10,15 @@
     --bg: #0a0c10; --surface: #111318; --surface2: #181c23; --border: #ffffff0f;
     --accent: #00e5a0; --accent3: #4d9fff; --text: #f0f2f7; --muted: #6b7280;
     --closed: #00e5a0; --open: #4d9fff; --inprogress: #f0b429; --waiting: #ff6b35;
+    --unassigned: #ff00ff;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:'DM Mono',monospace; background:var(--bg); color:var(--text); min-height:100vh; }
   body::before { content:''; position:fixed; inset:0; background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
   .container { position:relative; z-index:1; max-width:1200px; margin:0 auto; padding:40px 24px; }
-  header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:32px; flex-wrap:wrap; gap:20px; }
+  header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:32px; flex-wrap:wrap; gap:20px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
   .logo-area h1 { font-family:'Syne',sans-serif; font-size:24px; font-weight:800; }
   .logo-area h1 span { color:var(--accent); }
-  .logo-area p { font-size:11px; color:var(--muted); margin-top:4px; letter-spacing:2px; text-transform:uppercase; }
   
   #loading { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; gap:20px; }
   .spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
@@ -26,44 +26,37 @@
   #content { display:none; animation:fadeIn .4s ease; }
   @keyframes fadeIn { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)} }
 
-  .overview-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:28px; }
-  @media(max-width:900px){ .overview-grid { grid-template-columns:repeat(2,1fr); } }
-  .eng-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; cursor:pointer; transition:all .2s; position:relative; }
+  .overview-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px; margin-bottom:28px; }
+  .eng-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; cursor:pointer; transition:all .2s; position:relative; overflow: hidden; }
   .eng-card:hover { transform:translateY(-3px); background:var(--surface2); }
   .eng-card-name { font-family:'Syne',sans-serif; font-size:15px; font-weight:800; margin-bottom:12px; }
 
-  .eng-tabs { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:28px; }
-  .eng-tab { background:var(--surface); border:1px solid var(--border); border-radius:100px; padding:10px 20px; cursor:pointer; font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:var(--muted); border:none; transition: 0.2s; }
-  
   .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
   @media(max-width:700px){ .stats-grid { grid-template-columns:repeat(2,1fr); } }
-  
-  .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; position:relative; cursor:pointer; transition:all 0.2s; opacity: 0.4; }
-  .stat-card:hover { transform:translateY(-2px); background:var(--surface2); opacity: 0.8; }
+  .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; position:relative; cursor:pointer; transition:all 0.2s; opacity: 0.5; }
   .stat-card.active-slice { border: 1px solid white; opacity: 1; transform: scale(1.02); }
-  .stat-card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; }
+  .stat-card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:3px; }
   .stat-card.closed::after { background:var(--closed); }
   .stat-card.open::after { background:var(--open); }
   .stat-card.inprogress::after { background:var(--inprogress); }
   .stat-card.waiting::after { background:var(--waiting); }
-  .stat-value { font-family:'Syne',sans-serif; font-size:42px; font-weight:800; line-height:1; }
+  .stat-value { font-family:'Syne',sans-serif; font-size:42px; font-weight:800; line-height:1; margin-top: 10px; }
 
   .table-section { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
   .table-scroll { overflow-x: auto; }
-  table { width:100%; border-collapse:collapse; font-size:12px; min-width: 800px; }
+  table { width:100%; border-collapse:collapse; font-size:12px; min-width: 850px; }
   th { padding:12px 16px; text-align:left; background:var(--surface2); color:var(--muted); text-transform:uppercase; font-size:10px; }
   td { padding:12px 16px; border-bottom:1px solid var(--border); }
-  .status-badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:100px; font-size:10px; font-weight:600; }
-  .status-badge::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; }
+  
+  .status-badge { display:inline-flex; align-items:center; gap:5px; padding:4px 12px; border-radius:100px; font-size:10px; font-weight:700; }
   .badge-closed { background:#00e5a015; color:var(--closed); border:1px solid #00e5a030; }
   .badge-new { background:#4d9fff15; color:var(--open); border:1px solid #4d9fff30; }
   .badge-inprogress { background:#f0b42915; color:var(--inprogress); border:1px solid #f0b42930; }
   .badge-waiting { background:#ff6b3515; color:var(--waiting); border:1px solid #ff6b3530; }
-  .badge-unassigned { background:#ff00ff15; color:#ff00ff; border:1px solid #ff00ff30; }
-
-  .time-text { font-size:11px; font-weight:700; color:var(--accent3); }
+  .badge-unassigned { background:#ff00ff15; color:var(--unassigned); border:1px solid #ff00ff40; animation: pulse 2s infinite; }
+  
+  @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
   .refresh-btn { background:var(--accent); border:none; color:#000; padding:10px 20px; border-radius:8px; cursor:pointer; font-family:'Syne',sans-serif; font-size:12px; font-weight:700; }
-  .spinning span { animation:spin 0.8s linear infinite; display:inline-block; }
 </style>
 </head>
 <body>
@@ -71,63 +64,62 @@
   <header>
     <div class="logo-area">
       <h1>Service <span>Tickets</span></h1>
-      <p>Dashboard</p>
+      <p style="font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:2px; margin-top:5px;">Dashboard</p>
     </div>
-    <button class="refresh-btn" onclick="loadData()" id="rbtn"><span>↻</span> Refresh</button>
+    <button class="refresh-btn" onclick="loadData()" id="rbtn">↻ Refresh</button>
   </header>
 
-  <div id="loading"><div class="spinner"></div><p>Syncing all records...</p></div>
+  <div id="loading"><div class="spinner"></div><p>Connecting to Sheets...</p></div>
 
   <div id="content">
-    <div class="section-title" style="margin-bottom:15px; font-size:11px; text-transform:uppercase; color:var(--muted); letter-spacing:2px;">Team Overview</div>
     <div class="overview-grid" id="overview-grid"></div>
-    <div class="eng-tabs" id="eng-tabs"></div>
 
-    <div style="font-family:Syne; font-size:20px; font-weight:800; margin-bottom:10px; color:var(--accent);" id="view-title">All Staff</div>
-    <p style="font-size: 10px; color: var(--muted); margin-bottom: 20px;">Tracking live requests and database assignments.</p>
+    <div style="font-family:Syne; font-size:18px; font-weight:800; margin-bottom:20px; color:var(--accent);" id="view-title">All Staff Overview</div>
 
     <div class="stats-grid">
       <div class="stat-card closed active-slice" id="btn-Closed" onclick="toggleSlice('Closed')">
-        <div style="font-size:10px; color:var(--muted); text-transform:uppercase; margin-bottom:10px;">Resolved</div>
-        <div class="stat-value" style="color:var(--closed)" id="count-closed">0</div>
+        <small style="color:var(--muted)">RESOLVED</small>
+        <div class="stat-value" id="count-closed">0</div>
       </div>
       <div class="stat-card open active-slice" id="btn-New" onclick="toggleSlice('New')">
-        <div style="font-size:10px; color:var(--muted); text-transform:uppercase; margin-bottom:10px;">New / Unassigned</div>
-        <div class="stat-value" style="color:var(--open)" id="count-open">0</div>
+        <small style="color:var(--muted)">OPEN / NEW</small>
+        <div class="stat-value" id="count-open">0</div>
       </div>
       <div class="stat-card inprogress active-slice" id="btn-In Progress" onclick="toggleSlice('In Progress')">
-        <div style="font-size:10px; color:var(--muted); text-transform:uppercase; margin-bottom:10px;">Working</div>
-        <div class="stat-value" style="color:var(--inprogress)" id="count-inprogress">0</div>
+        <small style="color:var(--muted)">WORKING</small>
+        <div class="stat-value" id="count-inprogress">0</div>
       </div>
       <div class="stat-card waiting active-slice" id="btn-Waiting" onclick="toggleSlice('Waiting')">
-        <div style="font-size:10px; color:var(--muted); text-transform:uppercase; margin-bottom:10px;">Pending</div>
-        <div class="stat-value" style="color:var(--waiting)" id="count-waiting">0</div>
+        <small style="color:var(--muted)">PENDING</small>
+        <div class="stat-value" id="count-waiting">0</div>
       </div>
     </div>
 
     <div class="table-section">
-      <div style="padding:15px 20px; background:var(--surface2); font-size:11px; color:var(--muted); border-bottom:1px solid var(--border);" id="table-info"></div>
       <div class="table-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Clinic</th>
-            <th>Status</th>
-            <th>Time Info</th>
-            <th>Problem Description</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Assignee</th>
+              <th>Account/Clinic</th>
+              <th>Status</th>
+              <th>Duration</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-const SCRIPT_URL_MAIN = "https://script.google.com/macros/s/AKfycbxjKYbJDYGnxVctc20i5d2NdYijCLHWWEqE8LzHS7yRdGRP8GHioFcWfg6X7ai36xLR/exec";
+/**
+ * NEW AUTHORIZED URL
+ */
+const SCRIPT_URL_MAIN = "https://script.google.com/macros/s/AKfycby-B6TgmKGnX86YQYebeTq8su6imILPqbLUi5XvbFmm-MIatK3qFPxG9RcqMf_fGabV/exec";
 const SCRIPT_URL_NEW = "https://script.google.com/macros/s/AKfycbwcTd1Fm2G_NUocdxNtpHqXNmFkSTukJlCGLV00xAbrcbEJ_hL8OmthPFtBUbVJMH3W6w/exec";
 
 const ENGINEERS = [
@@ -144,7 +136,7 @@ window.onload = () => loadData();
 
 async function loadData() {
   const btn = document.getElementById('rbtn');
-  btn.classList.add('spinning');
+  btn.style.opacity = '0.5';
   try {
     const [res1, res2] = await Promise.all([
       fetch(SCRIPT_URL_MAIN + "?t=" + Date.now()),
@@ -157,16 +149,12 @@ async function loadData() {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('content').style.display = 'block';
     refreshUI();
-  } catch(e) { 
-    console.error("Sync failed:", e);
-    alert("Error: Check that both Google Scripts are deployed to 'Anyone'.");
-  }
-  btn.classList.remove('spinning');
+  } catch(e) { alert("Sync Error: Check Google Script Deployments"); }
+  btn.style.opacity = '1';
 }
 
 function refreshUI() {
   renderOverview();
-  renderTabs();
   updateStats();
   renderTable();
 }
@@ -190,29 +178,22 @@ function calculateDuration(start, end) {
 
 function renderOverview() {
   const grid = document.getElementById('overview-grid');
-  grid.innerHTML = ENGINEERS.map(eng => {
-    const t = allData.filter(r => getVal(r, 'Name').trim() === eng.name);
-    return `<div class="eng-card" onclick="selectEng('${eng.name}')">
+  grid.innerHTML = `<div class="eng-card ${currentEngineer==='all'?'active':''}" onclick="selectEng('all')">
+    <div class="eng-card-name" style="color:var(--accent)">Full Team</div>
+    <div style="font-size:11px; color:var(--muted)">${allData.length} Total Tickets</div>
+  </div>` + ENGINEERS.map(eng => {
+    const count = allData.filter(r => getVal(r, 'Name').trim() === eng.name).length;
+    return `<div class="eng-card ${currentEngineer===eng.name?'active':''}" onclick="selectEng('${eng.name}')">
       <div class="eng-card-name" style="color:${eng.color}">${eng.name}</div>
-      <div style="font-size:11px; color:var(--muted)">${t.length} Total</div>
+      <div style="font-size:11px; color:var(--muted)">${count} Records</div>
       <div style="position:absolute; bottom:0; left:0; right:0; height:3px; background:${eng.color}"></div>
     </div>`;
   }).join('');
 }
 
-function renderTabs() {
-  const tabs = document.getElementById('eng-tabs');
-  const items = [{name:'All Staff', key:'all', color:'var(--accent)'}, ...ENGINEERS.map(e=>({name:e.name, key:e.name, color:e.color}))];
-  tabs.innerHTML = items.map(e => `
-    <button class="eng-tab" onclick="selectEng('${e.key}')" 
-      style="${currentEngineer===e.key ? `background:${e.color}; color:#000;` : `background:var(--surface); color:var(--muted);` }">
-      ${e.name}
-    </button>`).join('');
-}
-
-function selectEng(key) {
-  currentEngineer = key;
-  document.getElementById('view-title').innerText = key === 'all' ? "All Staff" : key;
+function selectEng(name) {
+  currentEngineer = name;
+  document.getElementById('view-title').innerText = name === 'all' ? "All Staff Overview" : name + "'s Assigned Tickets";
   refreshUI();
 }
 
@@ -264,8 +245,8 @@ function renderTable() {
 
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = tickets.map((r, i) => {
-    const statusVal = getVal(r, 'Current Status', 'Status') || 'New';
     const nameVal = getVal(r, 'Name');
+    const statusVal = getVal(r, 'Current Status', 'Status') || 'New';
     const isUnassigned = (nameVal === '');
     
     let bc = 'badge-new';
@@ -274,20 +255,15 @@ function renderTable() {
     else if(statusVal.toLowerCase().includes('waiting')) bc = 'badge-waiting';
     if(isUnassigned) bc = 'badge-unassigned';
 
-    const startTime = getVal(r, 'Timestamp', 'Request Date');
-    const duration = calculateDuration(startTime, getVal(r, 'Closing Date'));
-
     return `<tr>
       <td>${i+1}</td>
-      <td style="font-weight:700;">${nameVal || '<span style="color:#ff00ff">Unassigned</span>'}</td>
+      <td style="font-weight:700;">${nameVal || '<span style="color:var(--unassigned)">⚠ UNASSIGNED</span>'}</td>
       <td>${getVal(r, 'Clinic/Hospital Name', 'Customer/Account Name') || '-'}</td>
-      <td><span class="status-badge ${bc}">${isUnassigned ? 'Unassigned' : statusVal}</span></td>
-      <td><span class="time-text">${duration}</span> <small style="color:var(--muted)">${statusVal.toLowerCase().includes('closed') ? '(Resolved)' : '(Age)'}</small></td>
-      <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${getVal(r, 'Description of the Technical Issue', 'Problem Description') || '-'}</td>
+      <td><span class="status-badge ${bc}">${isUnassigned ? 'Awaiting Engineer' : statusVal}</span></td>
+      <td><span style="color:var(--accent3)">${calculateDuration(getVal(r, 'Timestamp', 'Request Date'), getVal(r, 'Closing Date'))}</span></td>
+      <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted)">${getVal(r, 'Description of the Technical Issue', 'Problem Description') || '-'}</td>
     </tr>`;
   }).join('');
-
-  document.getElementById('table-info').innerText = `Displaying ${tickets.length} records. Filters: [${selectedStatuses.join(', ')}]`;
 }
 </script>
 </body>
