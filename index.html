@@ -127,7 +127,6 @@
 </div>
 
 <script>
-// BOTH SCRIPTS DEFINED HERE
 const SCRIPT_URL_MAIN = "https://script.google.com/macros/s/AKfycbxjKYbJDYGnxVctc20i5d2NdYijCLHWWEqE8LzHS7yRdGRP8GHioFcWfg6X7ai36xLR/exec";
 const SCRIPT_URL_NEW = "https://script.google.com/macros/s/AKfycbwcTd1Fm2G_NUocdxNtpHqXNmFkSTukJlCGLV00xAbrcbEJ_hL8OmthPFtBUbVJMH3W6w/exec";
 
@@ -158,7 +157,10 @@ async function loadData() {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('content').style.display = 'block';
     refreshUI();
-  } catch(e) { console.error("Sync failed:", e); }
+  } catch(e) { 
+    console.error("Sync failed:", e);
+    alert("Error: Check that both Google Scripts are deployed to 'Anyone'.");
+  }
   btn.classList.remove('spinning');
 }
 
@@ -167,6 +169,13 @@ function refreshUI() {
   renderTabs();
   updateStats();
   renderTable();
+}
+
+function getVal(obj, ...keys) {
+  for (let key of keys) {
+    if (obj[key] !== undefined && obj[key] !== null) return obj[key].toString().trim();
+  }
+  return "";
 }
 
 function calculateDuration(start, end) {
@@ -182,7 +191,7 @@ function calculateDuration(start, end) {
 function renderOverview() {
   const grid = document.getElementById('overview-grid');
   grid.innerHTML = ENGINEERS.map(eng => {
-    const t = allData.filter(r => (r['Name']||'').trim() === eng.name);
+    const t = allData.filter(r => getVal(r, 'Name').trim() === eng.name);
     return `<div class="eng-card" onclick="selectEng('${eng.name}')">
       <div class="eng-card-name" style="color:${eng.color}">${eng.name}</div>
       <div style="font-size:11px; color:var(--muted)">${t.length} Total</div>
@@ -208,11 +217,11 @@ function selectEng(key) {
 }
 
 function updateStats() {
-  const tickets = currentEngineer === 'all' ? allData : allData.filter(r => (r['Name']||'').trim() === currentEngineer);
+  const tickets = currentEngineer === 'all' ? allData : allData.filter(r => getVal(r, 'Name').trim() === currentEngineer);
   const c = {closed:0, open:0, inprogress:0, waiting:0};
   
   tickets.forEach(r => {
-    const s = (r['Current Status'] || 'New').toLowerCase();
+    const s = getVal(r, 'Current Status', 'Status').toLowerCase();
     if(s.includes('closed')) c.closed++;
     else if(s.includes('new') || s === '') c.open++;
     else if(s.includes('in progress')) c.inprogress++;
@@ -238,11 +247,11 @@ function toggleSlice(status) {
 }
 
 function renderTable() {
-  let tickets = currentEngineer === 'all' ? allData : allData.filter(r => (r['Name']||'').trim() === currentEngineer);
+  let tickets = currentEngineer === 'all' ? allData : allData.filter(r => getVal(r, 'Name').trim() === currentEngineer);
   
   if (selectedStatuses.length > 0) {
     tickets = tickets.filter(r => {
-      const s = (r['Current Status'] || 'New').toLowerCase();
+      const s = getVal(r, 'Current Status', 'Status').toLowerCase();
       return selectedStatuses.some(status => {
         if (status === 'Waiting') return s.includes('waiting');
         if (status === 'New') return (s.includes('new') || s === '');
@@ -255,8 +264,9 @@ function renderTable() {
 
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = tickets.map((r, i) => {
-    const statusVal = r['Current Status'] || 'New';
-    const isUnassigned = (!r['Name'] || r['Name'] === '');
+    const statusVal = getVal(r, 'Current Status', 'Status') || 'New';
+    const nameVal = getVal(r, 'Name');
+    const isUnassigned = (nameVal === '');
     
     let bc = 'badge-new';
     if(statusVal.toLowerCase().includes('closed')) bc = 'badge-closed';
@@ -264,16 +274,16 @@ function renderTable() {
     else if(statusVal.toLowerCase().includes('waiting')) bc = 'badge-waiting';
     if(isUnassigned) bc = 'badge-unassigned';
 
-    const startTime = r['Timestamp'] || r['Request Date'];
-    const duration = calculateDuration(startTime, r['Closing Date']);
+    const startTime = getVal(r, 'Timestamp', 'Request Date');
+    const duration = calculateDuration(startTime, getVal(r, 'Closing Date'));
 
     return `<tr>
       <td>${i+1}</td>
-      <td style="font-weight:700;">${r['Name'] || '<span style="color:#ff00ff">Unassigned</span>'}</td>
-      <td>${r['Clinic/Hospital Name'] || r['Customer/Account Name'] || '-'}</td>
+      <td style="font-weight:700;">${nameVal || '<span style="color:#ff00ff">Unassigned</span>'}</td>
+      <td>${getVal(r, 'Clinic/Hospital Name', 'Customer/Account Name') || '-'}</td>
       <td><span class="status-badge ${bc}">${isUnassigned ? 'Unassigned' : statusVal}</span></td>
       <td><span class="time-text">${duration}</span> <small style="color:var(--muted)">${statusVal.toLowerCase().includes('closed') ? '(Resolved)' : '(Age)'}</small></td>
-      <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${r['Description of the Technical Issue'] || r['Problem Description'] || '-'}</td>
+      <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${getVal(r, 'Description of the Technical Issue', 'Problem Description') || '-'}</td>
     </tr>`;
   }).join('');
 
