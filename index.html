@@ -56,11 +56,13 @@
   .assign-select { background:#1a0a1a; color:var(--unassigned); border:1px solid #ff00ff40; border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; outline:none; animation:pulse 2s infinite; }
   .assign-btn { background:var(--unassigned); color:#000; border:none; border-radius:6px; padding:4px 10px; font-family:'Syne',sans-serif; font-size:10px; font-weight:800; cursor:pointer; transition:all .2s; }
   .assign-btn:hover { opacity:0.8; transform:scale(1.05); }
+  .assign-btn:disabled { opacity:0.4; cursor:not-allowed; }
   .status-select { background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; outline:none; width:100%; }
   .status-select:hover { border-color:var(--accent); }
   .spare-input { background:var(--surface2); color:var(--text); border:1px solid var(--waiting); border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace; font-size:11px; outline:none; width:140px; margin-top:4px; }
   .spare-input::placeholder { color:var(--muted); }
   .save-btn { background:var(--waiting); color:#000; border:none; border-radius:6px; padding:3px 8px; font-family:'Syne',sans-serif; font-size:10px; font-weight:800; cursor:pointer; margin-top:4px; }
+  .save-btn:disabled { opacity:0.4; cursor:not-allowed; }
   .spare-parts-cell { color:var(--waiting); font-size:11px; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   #toast { position:fixed; bottom:30px; right:30px; background:var(--accent); color:#000; padding:12px 20px; border-radius:10px; font-family:'Syne',sans-serif; font-weight:800; font-size:13px; transform:translateY(100px); opacity:0; transition:all .3s; z-index:999; }
   #toast.show { transform:translateY(0); opacity:1; }
@@ -81,8 +83,6 @@
   <div id="content">
     <div class="overview-grid" id="overview-grid"></div>
     <div style="font-family:Syne;font-size:18px;font-weight:800;margin-bottom:20px;color:var(--accent);" id="view-title">All Staff Overview</div>
-
-    <!-- FILTERS: New → In Progress → Waiting for Spare Parts → Closed -->
     <div class="stats-grid">
       <div class="stat-card open active-slice" id="btn-New" onclick="toggleSlice('New')">
         <small style="color:var(--muted)">NEW</small>
@@ -101,19 +101,13 @@
         <div class="stat-value" id="count-closed">0</div>
       </div>
     </div>
-
     <div class="table-section">
       <div class="table-scroll">
         <table>
           <thead>
             <tr>
-              <th>#</th>
-              <th>Assignee</th>
-              <th>Account/Clinic</th>
-              <th>Status</th>
-              <th>Spare Parts</th>
-              <th>Duration</th>
-              <th>Description</th>
+              <th>#</th><th>Assignee</th><th>Account/Clinic</th>
+              <th>Status</th><th>Spare Parts</th><th>Duration</th><th>Description</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -125,8 +119,11 @@
 <div id="toast"></div>
 
 <script>
-const SCRIPT_URL_NEW  = "https://script.google.com/macros/s/AKfycbyRLu4wnsB7cjQz73pfv71ghfinH6BpE5kwmoTp4NHgajSbXfdqt-agAj_fYfZsmEYm/exec";
-const SCRIPT_URL_MAIN = "https://script.google.com/macros/s/AKfycbwJ3PfGotrfcMwKc-x-9Lx3Y8xgl3JoOXl3q0OMzqU_3_dH4by29G2NJyRrvmuv6ZIUbQ/exec";
+// ✅ Engineers Script - manages tickets
+const ENGINEERS_SCRIPT = "https://script.google.com/macros/s/AKfycbxpNWPofPEaUC8sX01slerzchcBTE98do2Mfu_X7gDJ5oKFcJRwS63KpsdSVR_bBKVN/exec";
+
+// ✅ Clients Script - form responses
+const CLIENTS_SCRIPT = "https://script.google.com/macros/s/AKfycbyRLu4wnsB7cjQz73pfv71ghfinH6BpE5kwmoTp4NHgajSbXfdqt-agAj_fYfZsmEYm/exec";
 
 const ENGINEERS = [
   {name:"Shakeel",color:"#4d9fff"},{name:"Sam",color:"#00e5a0"},
@@ -142,9 +139,10 @@ let selectedStatuses = ['New','In Progress','Waiting','Closed'];
 
 window.onload = () => loadData();
 
-function showToast(msg) {
+function showToast(msg, color) {
   const t = document.getElementById('toast');
   t.innerText = msg;
+  t.style.background = color || 'var(--accent)';
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
 }
@@ -156,12 +154,12 @@ function fetchJSONP(url) {
     const timeout = setTimeout(() => {
       delete window[cbName]; document.body.removeChild(script);
       reject(new Error('Timeout'));
-    }, 10000);
+    }, 15000);
     window[cbName] = (data) => {
       clearTimeout(timeout); delete window[cbName]; document.body.removeChild(script);
       resolve(data);
     };
-    script.src = url + '?callback=' + cbName + '&t=' + Date.now();
+    script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cbName + '&t=' + Date.now();
     script.onerror = () => {
       clearTimeout(timeout); delete window[cbName]; document.body.removeChild(script);
       reject(new Error('Script error'));
@@ -173,12 +171,13 @@ function fetchJSONP(url) {
 async function loadData() {
   const btn = document.getElementById('rbtn');
   btn.style.opacity = '0.5';
+  btn.innerText = '↻ Loading...';
   try {
-    const [data1, data2] = await Promise.all([
-      fetchJSONP(SCRIPT_URL_MAIN),
-      fetchJSONP(SCRIPT_URL_NEW)
+    const [engData, clientData] = await Promise.all([
+      fetchJSONP(ENGINEERS_SCRIPT),
+      fetchJSONP(CLIENTS_SCRIPT)
     ]);
-    allData = [...data1, ...data2];
+    allData = [...engData, ...clientData];
     document.getElementById('loading').style.display = 'none';
     document.getElementById('content').style.display = 'block';
     refreshUI();
@@ -186,6 +185,7 @@ async function loadData() {
     alert("Sync Error: " + e.message);
   }
   btn.style.opacity = '1';
+  btn.innerText = '↻ Refresh';
 }
 
 function refreshUI() { renderOverview(); updateStats(); renderTable(); }
@@ -256,34 +256,70 @@ function toggleSlice(status) {
   renderTable();
 }
 
-// Assign engineer + set status to In Progress
-function assignEngineer(realIndex, selectEl) {
+// ✅ Assign engineer → saves to Engineers Sheet
+async function assignEngineer(realIndex, selectEl, btnEl) {
   const engineerName = selectEl.value;
-  if (!engineerName) return;
-  allData[realIndex]['Name'] = engineerName;
-  allData[realIndex]['Current Status'] = 'In Progress';
-  allData[realIndex]['Status'] = 'In Progress';
-  showToast('✅ Assigned to ' + engineerName + ' → In Progress');
-  refreshUI();
-}
+  if (!engineerName) { showToast('⚠ Please select an engineer!', '#ff6b35'); return; }
 
-// Update status from dropdown
-function updateStatus(realIndex, newStatus) {
-  allData[realIndex]['Current Status'] = newStatus;
-  allData[realIndex]['Status'] = newStatus;
-  if (newStatus !== 'Waiting') {
-    allData[realIndex]['_spareParts'] = '';
+  btnEl.disabled = true;
+  btnEl.innerText = 'Saving...';
+
+  const ticket = allData[realIndex];
+  const timestamp = getVal(ticket, 'Timestamp');
+
+  try {
+    await fetchJSONP(ENGINEERS_SCRIPT + '?action=assign&timestamp=' + encodeURIComponent(timestamp) + '&name=' + encodeURIComponent(engineerName));
+    allData[realIndex]['Name'] = engineerName;
+    allData[realIndex]['Current Status'] = 'In Progress';
+    showToast('✅ Assigned to ' + engineerName + ' → In Progress');
+  } catch(e) {
+    // Update locally even if save fails
+    allData[realIndex]['Name'] = engineerName;
+    allData[realIndex]['Current Status'] = 'In Progress';
+    showToast('⚠ Saved locally only', '#f0b429');
   }
-  showToast('✅ Status updated to: ' + newStatus);
   refreshUI();
 }
 
-// Save spare parts text
-function saveSpareParts(realIndex, inputEl) {
+// ✅ Update status → saves to Engineers Sheet
+async function updateStatus(realIndex, newStatus, selectEl) {
+  selectEl.disabled = true;
+
+  const ticket = allData[realIndex];
+  const timestamp = getVal(ticket, 'Timestamp');
+
+  try {
+    await fetchJSONP(ENGINEERS_SCRIPT + '?action=updateStatus&timestamp=' + encodeURIComponent(timestamp) + '&status=' + encodeURIComponent(newStatus));
+    allData[realIndex]['Current Status'] = newStatus;
+    allData[realIndex]['Status'] = newStatus;
+    if (newStatus !== 'Waiting') allData[realIndex]['_spareParts'] = '';
+    showToast('✅ Status updated to: ' + (newStatus === 'Waiting' ? 'Waiting for Spare Parts' : newStatus));
+  } catch(e) {
+    allData[realIndex]['Current Status'] = newStatus;
+    showToast('⚠ Saved locally only', '#f0b429');
+  }
+  refreshUI();
+}
+
+// ✅ Save spare parts → saves to Engineers Sheet
+async function saveSpareParts(realIndex, inputEl, btnEl) {
   const parts = inputEl.value.trim();
-  if (!parts) return;
-  allData[realIndex]['_spareParts'] = parts;
-  showToast('🔧 Spare parts saved: ' + parts);
+  if (!parts) { showToast('⚠ Please enter spare parts!', '#ff6b35'); return; }
+
+  btnEl.disabled = true;
+  btnEl.innerText = 'Saving...';
+
+  const ticket = allData[realIndex];
+  const timestamp = getVal(ticket, 'Timestamp');
+
+  try {
+    await fetchJSONP(ENGINEERS_SCRIPT + '?action=updateStatus&timestamp=' + encodeURIComponent(timestamp) + '&status=Waiting&spareParts=' + encodeURIComponent(parts));
+    allData[realIndex]['_spareParts'] = parts;
+    showToast('🔧 Spare parts saved!');
+  } catch(e) {
+    allData[realIndex]['_spareParts'] = parts;
+    showToast('⚠ Saved locally only', '#f0b429');
+  }
   refreshUI();
 }
 
@@ -311,6 +347,7 @@ function renderTable() {
     const realIndex = allData.indexOf(r);
     const spareParts = r['_spareParts'] || getVal(r,'What spare part is needed?') || '';
     const isWaiting = statusVal.toLowerCase().includes('waiting');
+    const engColor = ENGINEERS.find(e => e.name === nameVal)?.color || 'var(--text)';
 
     let bc = 'badge-new';
     if(statusVal.toLowerCase().includes('closed')) bc = 'badge-closed';
@@ -318,36 +355,29 @@ function renderTable() {
     else if(statusVal.toLowerCase().includes('waiting')) bc = 'badge-waiting';
     if(isUnassigned) bc = 'badge-unassigned';
 
-    const engColor = ENGINEERS.find(e => e.name === nameVal)?.color || 'var(--text)';
-
-    // Assignee cell
     const assigneeCell = isUnassigned
       ? `<div class="assign-wrap">
           <select class="assign-select" id="sel-${realIndex}">
             <option value="">⚠ Assign to...</option>
             ${ENGINEERS.map(e => `<option value="${e.name}">${e.name}</option>`).join('')}
           </select>
-          <button class="assign-btn" onclick="assignEngineer(${realIndex}, document.getElementById('sel-${realIndex}'))">Assign ✓</button>
+          <button class="assign-btn" id="abtn-${realIndex}" onclick="assignEngineer(${realIndex}, document.getElementById('sel-${realIndex}'), document.getElementById('abtn-${realIndex}'))">Assign ✓</button>
         </div>`
       : `<span style="font-weight:700;color:${engColor}">${nameVal}</span>`;
 
-    // Status cell — dropdown for assigned tickets
     const statusCell = isUnassigned
       ? `<span class="status-badge ${bc}">Awaiting Engineer</span>`
-      : `<div>
-          <select class="status-select" onchange="updateStatus(${realIndex}, this.value)">
-            ${STATUS_OPTIONS.map(s => `<option value="${s}" ${statusVal===s?'selected':''}>${s === 'Waiting' ? 'Waiting for Spare Parts' : s}</option>`).join('')}
-          </select>
-        </div>`;
+      : `<select class="status-select" onchange="updateStatus(${realIndex}, this.value, this)">
+          ${STATUS_OPTIONS.map(s => `<option value="${s}" ${statusVal===s?'selected':''}>${s==='Waiting'?'Waiting for Spare Parts':s}</option>`).join('')}
+        </select>`;
 
-    // Spare parts cell
     const spareCell = isWaiting
       ? `<div>
-          <div class="spare-parts-cell">${spareParts || '-'}</div>
+          ${spareParts ? `<div class="spare-parts-cell">🔧 ${spareParts}</div>` : ''}
           <input class="spare-input" id="spare-${realIndex}" placeholder="Enter spare parts..." value="${spareParts}"/>
-          <br><button class="save-btn" onclick="saveSpareParts(${realIndex}, document.getElementById('spare-${realIndex}'))">💾 Save</button>
+          <br><button class="save-btn" id="sbtn-${realIndex}" onclick="saveSpareParts(${realIndex}, document.getElementById('spare-${realIndex}'), document.getElementById('sbtn-${realIndex}'))">💾 Save</button>
         </div>`
-      : `<span class="spare-parts-cell">${spareParts || '-'}</span>`;
+      : `<span class="spare-parts-cell">${spareParts ? '🔧 ' + spareParts : '-'}</span>`;
 
     return `<tr>
       <td>${i+1}</td>
