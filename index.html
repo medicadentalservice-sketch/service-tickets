@@ -29,6 +29,7 @@
   .overview-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px; margin-bottom:28px; }
   .eng-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; cursor:pointer; transition:all .2s; position:relative; overflow: hidden; }
   .eng-card:hover { transform:translateY(-3px); background:var(--surface2); }
+  .eng-card.active { border: 1px solid white; background: var(--surface2); }
   .eng-card-name { font-family:'Syne',sans-serif; font-size:15px; font-weight:800; margin-bottom:12px; }
 
   .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
@@ -117,7 +118,7 @@
 
 <script>
 /**
- * NEW AUTHORIZED URL
+ * DUAL SHEET DATA FETCHING
  */
 const SCRIPT_URL_MAIN = "https://script.google.com/macros/s/AKfycby-B6TgmKGnX86YQYebeTq8su6imILPqbLUi5XvbFmm-MIatK3qFPxG9RcqMf_fGabV/exec";
 const SCRIPT_URL_NEW = "https://script.google.com/macros/s/AKfycbwcTd1Fm2G_NUocdxNtpHqXNmFkSTukJlCGLV00xAbrcbEJ_hL8OmthPFtBUbVJMH3W6w/exec";
@@ -144,12 +145,17 @@ async function loadData() {
     ]);
     const data1 = await res1.json();
     const data2 = await res2.json();
+    
+    // Combine records from both spreadsheets
     allData = [...data1, ...data2];
     
     document.getElementById('loading').style.display = 'none';
     document.getElementById('content').style.display = 'block';
     refreshUI();
-  } catch(e) { alert("Sync Error: Check Google Script Deployments"); }
+  } catch(e) { 
+    console.error("Sync Error:", e);
+    alert("Sync Error: Please ensure both Google Scripts are deployed correctly."); 
+  }
   btn.style.opacity = '1';
 }
 
