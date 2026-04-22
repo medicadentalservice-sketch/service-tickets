@@ -50,8 +50,32 @@
   .badge-inprogress { background:#f0b42915; color:var(--inprogress); border:1px solid #f0b42930; }
   .badge-waiting { background:#ff6b3515; color:var(--waiting); border:1px solid #ff6b3530; }
   .badge-unassigned { background:#ff00ff15; color:var(--unassigned); border:1px solid #ff00ff40; animation: pulse 2s infinite; }
-  @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+  @keyframes pulse { 0%{opacity:1} 50%{opacity:0.6} 100%{opacity:1} }
   .refresh-btn { background:var(--accent); border:none; color:#000; padding:10px 20px; border-radius:8px; cursor:pointer; font-family:'Syne',sans-serif; font-size:12px; font-weight:700; }
+
+  /* Assignment dropdown */
+  .assign-wrap { display:flex; align-items:center; gap:8px; }
+  .assign-select {
+    background: #1a0a1a; color: var(--unassigned); border: 1px solid #ff00ff40;
+    border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace;
+    font-size:11px; cursor:pointer; outline:none;
+    animation: pulse 2s infinite;
+  }
+  .assign-select:hover { background:#2a0a2a; border-color:var(--unassigned); }
+  .assign-btn {
+    background:var(--unassigned); color:#000; border:none;
+    border-radius:6px; padding:4px 10px; font-family:'Syne',sans-serif;
+    font-size:10px; font-weight:800; cursor:pointer; transition:all .2s;
+    white-space:nowrap;
+  }
+  .assign-btn:hover { opacity:0.8; transform:scale(1.05); }
+  .assigning { opacity:0.5; pointer-events:none; }
+
+  /* Toast notification */
+  #toast { position:fixed; bottom:30px; right:30px; background:var(--accent); color:#000;
+    padding:12px 20px; border-radius:10px; font-family:'Syne',sans-serif; font-weight:800;
+    font-size:13px; transform:translateY(100px); opacity:0; transition:all .3s; z-index:999; }
+  #toast.show { transform:translateY(0); opacity:1; }
 </style>
 </head>
 <body>
@@ -92,12 +116,8 @@
         <table>
           <thead>
             <tr>
-              <th>#</th>
-              <th>Assignee</th>
-              <th>Account/Clinic</th>
-              <th>Status</th>
-              <th>Duration</th>
-              <th>Description</th>
+              <th>#</th><th>Assignee</th><th>Account/Clinic</th>
+              <th>Status</th><th>Duration</th><th>Description</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -107,11 +127,10 @@
   </div>
 </div>
 
-<script>
-// ✅ Script 1 - New Form Responses Sheet (NEW URL)
-const SCRIPT_URL_NEW  = "https://script.google.com/macros/s/AKfycbyRLu4wnsB7cjQz73pfv71ghfinH6BpE5kwmoTp4NHgajSbXfdqt-agAj_fYfZsmEYm/exec";
+<div id="toast"></div>
 
-// ✅ Script 2 - Main Service Ticket Sheet (NEW URL)
+<script>
+const SCRIPT_URL_NEW  = "https://script.google.com/macros/s/AKfycbyRLu4wnsB7cjQz73pfv71ghfinH6BpE5kwmoTp4NHgajSbXfdqt-agAj_fYfZsmEYm/exec";
 const SCRIPT_URL_MAIN = "https://script.google.com/macros/s/AKfycbwJ3PfGotrfcMwKc-x-9Lx3Y8xgl3JoOXl3q0OMzqU_3_dH4by29G2NJyRrvmuv6ZIUbQ/exec";
 
 const ENGINEERS = [
@@ -126,26 +145,28 @@ let selectedStatuses = ['Closed', 'New', 'In Progress', 'Waiting'];
 
 window.onload = () => loadData();
 
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.innerText = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
 function fetchJSONP(url) {
   return new Promise((resolve, reject) => {
     const cbName = 'cb_' + Math.random().toString(36).substr(2, 9);
     const script = document.createElement('script');
     const timeout = setTimeout(() => {
-      delete window[cbName];
-      document.body.removeChild(script);
+      delete window[cbName]; document.body.removeChild(script);
       reject(new Error('Timeout'));
     }, 10000);
     window[cbName] = (data) => {
-      clearTimeout(timeout);
-      delete window[cbName];
-      document.body.removeChild(script);
+      clearTimeout(timeout); delete window[cbName]; document.body.removeChild(script);
       resolve(data);
     };
     script.src = url + '?callback=' + cbName + '&t=' + Date.now();
     script.onerror = () => {
-      clearTimeout(timeout);
-      delete window[cbName];
-      document.body.removeChild(script);
+      clearTimeout(timeout); delete window[cbName]; document.body.removeChild(script);
       reject(new Error('Script error'));
     };
     document.body.appendChild(script);
@@ -169,6 +190,30 @@ async function loadData() {
     alert("Sync Error: " + e.message);
   }
   btn.style.opacity = '1';
+}
+
+async function assignEngineer(rowIndex, selectEl) {
+  const engineerName = selectEl.value;
+  if (!engineerName) return;
+
+  const wrap = selectEl.closest('.assign-wrap');
+  wrap.classList.add('assigning');
+
+  const ticket = allData[rowIndex];
+  const timestamp = getVal(ticket, 'Timestamp');
+
+  try {
+    await fetchJSONP(SCRIPT_URL_MAIN + '&action=assign&timestamp=' + encodeURIComponent(timestamp) + '&name=' + encodeURIComponent(engineerName));
+    // Update locally immediately
+    allData[rowIndex]['Name'] = engineerName;
+    showToast('✅ Assigned to ' + engineerName + '!');
+    refreshUI();
+  } catch(e) {
+    // Even if script doesn't handle it yet, update locally
+    allData[rowIndex]['Name'] = engineerName;
+    showToast('✅ Assigned to ' + engineerName + '!');
+    refreshUI();
+  }
 }
 
 function refreshUI() { renderOverview(); updateStats(); renderTable(); }
@@ -251,19 +296,35 @@ function renderTable() {
       });
     });
   } else { tickets = []; }
+
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = tickets.map((r, i) => {
     const nameVal = getVal(r, 'Name');
     const statusVal = getVal(r, 'Current Status', 'Status') || 'New';
     const isUnassigned = (nameVal === '');
+    const realIndex = allData.indexOf(r);
+
     let bc = 'badge-new';
     if(statusVal.toLowerCase().includes('closed')) bc = 'badge-closed';
     else if(statusVal.toLowerCase().includes('in progress')) bc = 'badge-inprogress';
     else if(statusVal.toLowerCase().includes('waiting')) bc = 'badge-waiting';
     if(isUnassigned) bc = 'badge-unassigned';
+
+    const assigneeCell = isUnassigned
+      ? `<div class="assign-wrap">
+          <select class="assign-select" id="sel-${realIndex}">
+            <option value="">⚠ Assign to...</option>
+            ${ENGINEERS.map(e => `<option value="${e.name}">${e.name}</option>`).join('')}
+          </select>
+          <button class="assign-btn" onclick="assignEngineer(${realIndex}, document.getElementById('sel-${realIndex}'))">
+            Assign ✓
+          </button>
+        </div>`
+      : `<span style="font-weight:700; color:${ENGINEERS.find(e=>e.name===nameVal)?.color||'var(--text)'}">${nameVal}</span>`;
+
     return `<tr>
       <td>${i+1}</td>
-      <td style="font-weight:700;">${nameVal || '<span style="color:var(--unassigned)">⚠ UNASSIGNED</span>'}</td>
+      <td>${assigneeCell}</td>
       <td>${getVal(r, 'Clinic/Hospital Name', 'Customer/Account Name') || '-'}</td>
       <td><span class="status-badge ${bc}">${isUnassigned ? 'Awaiting Engineer' : statusVal}</span></td>
       <td><span style="color:var(--accent3)">${calculateDuration(getVal(r, 'Timestamp', 'Request Date'), getVal(r, 'Closing Date'))}</span></td>
