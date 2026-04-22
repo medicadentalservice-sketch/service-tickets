@@ -52,19 +52,19 @@
   .badge-unassigned { background:#ff00ff15; color:var(--unassigned); border:1px solid #ff00ff40; animation:pulse 2s infinite; }
   @keyframes pulse { 0%{opacity:1}50%{opacity:0.6}100%{opacity:1} }
   .refresh-btn { background:var(--accent); border:none; color:#000; padding:10px 20px; border-radius:8px; cursor:pointer; font-family:'Syne',sans-serif; font-size:12px; font-weight:700; }
-  .assign-wrap { display:flex; align-items:center; gap:8px; }
+  .assign-wrap { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   .assign-select { background:#1a0a1a; color:var(--unassigned); border:1px solid #ff00ff40; border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; outline:none; animation:pulse 2s infinite; }
   .assign-btn { background:var(--unassigned); color:#000; border:none; border-radius:6px; padding:4px 10px; font-family:'Syne',sans-serif; font-size:10px; font-weight:800; cursor:pointer; transition:all .2s; }
-  .assign-btn:hover { opacity:0.8; transform:scale(1.05); }
   .assign-btn:disabled { opacity:0.4; cursor:not-allowed; }
   .status-select { background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; outline:none; width:100%; }
   .status-select:hover { border-color:var(--accent); }
-  .spare-input { background:var(--surface2); color:var(--text); border:1px solid var(--waiting); border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace; font-size:11px; outline:none; width:140px; margin-top:4px; }
+  .spare-wrap { display:flex; flex-direction:column; gap:4px; }
+  .spare-input { background:var(--surface2); color:var(--text); border:1px solid var(--waiting); border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace; font-size:11px; outline:none; width:150px; }
   .spare-input::placeholder { color:var(--muted); }
-  .save-btn { background:var(--waiting); color:#000; border:none; border-radius:6px; padding:3px 8px; font-family:'Syne',sans-serif; font-size:10px; font-weight:800; cursor:pointer; margin-top:4px; }
+  .save-btn { background:var(--waiting); color:#000; border:none; border-radius:6px; padding:3px 8px; font-family:'Syne',sans-serif; font-size:10px; font-weight:800; cursor:pointer; width:fit-content; }
   .save-btn:disabled { opacity:0.4; cursor:not-allowed; }
-  .spare-parts-cell { color:var(--waiting); font-size:11px; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  #toast { position:fixed; bottom:30px; right:30px; background:var(--accent); color:#000; padding:12px 20px; border-radius:10px; font-family:'Syne',sans-serif; font-weight:800; font-size:13px; transform:translateY(100px); opacity:0; transition:all .3s; z-index:999; }
+  .spare-text { color:var(--waiting); font-size:11px; }
+  #toast { position:fixed; bottom:30px; right:30px; color:#000; padding:12px 20px; border-radius:10px; font-family:'Syne',sans-serif; font-weight:800; font-size:13px; transform:translateY(100px); opacity:0; transition:all .3s; z-index:999; }
   #toast.show { transform:translateY(0); opacity:1; }
 </style>
 </head>
@@ -106,8 +106,13 @@
         <table>
           <thead>
             <tr>
-              <th>#</th><th>Assignee</th><th>Account/Clinic</th>
-              <th>Status</th><th>Spare Parts</th><th>Duration</th><th>Description</th>
+              <th>#</th>
+              <th>Assignee</th>
+              <th>Account/Clinic</th>
+              <th>Status</th>
+              <th>Spare Parts</th>
+              <th>Duration</th>
+              <th>Description</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -119,15 +124,14 @@
 <div id="toast"></div>
 
 <script>
-// ✅ Engineers Script - manages tickets
-const ENGINEERS_SCRIPT = "https://script.google.com/macros/s/AKfycbxpNWPofPEaUC8sX01slerzchcBTE98do2Mfu_X7gDJ5oKFcJRwS63KpsdSVR_bBKVN/exec";
-
-// ✅ Clients Script - form responses
-const CLIENTS_SCRIPT = "https://script.google.com/macros/s/AKfycbyRLu4wnsB7cjQz73pfv71ghfinH6BpE5kwmoTp4NHgajSbXfdqt-agAj_fYfZsmEYm/exec";
+// ✅ ONE script only — Engineers Script
+const SCRIPT = "https://script.google.com/macros/s/AKfycbxpNWPofPEaUC8sX01slerzchcBTE98do2Mfu_X7gDJ5oKFcJRwS63KpsdSVR_bBKVN/exec";
 
 const ENGINEERS = [
-  {name:"Shakeel",color:"#4d9fff"},{name:"Sam",color:"#00e5a0"},
-  {name:"Bernard",color:"#f0b429"},{name:"Ghulam",color:"#ff6b35"},
+  {name:"Shakeel",color:"#4d9fff"},
+  {name:"Sam",color:"#00e5a0"},
+  {name:"Bernard",color:"#f0b429"},
+  {name:"Ghulam",color:"#ff6b35"},
   {name:"Ahmad",color:"#a855f7"}
 ];
 
@@ -142,7 +146,7 @@ window.onload = () => loadData();
 function showToast(msg, color) {
   const t = document.getElementById('toast');
   t.innerText = msg;
-  t.style.background = color || 'var(--accent)';
+  t.style.background = color || '#00e5a0';
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
 }
@@ -152,18 +156,23 @@ function fetchJSONP(url) {
     const cbName = 'cb_' + Math.random().toString(36).substr(2, 9);
     const script = document.createElement('script');
     const timeout = setTimeout(() => {
-      delete window[cbName]; document.body.removeChild(script);
+      try { document.body.removeChild(script); } catch(e){}
+      delete window[cbName];
       reject(new Error('Timeout'));
     }, 15000);
     window[cbName] = (data) => {
-      clearTimeout(timeout); delete window[cbName]; document.body.removeChild(script);
+      clearTimeout(timeout);
+      try { document.body.removeChild(script); } catch(e){}
+      delete window[cbName];
       resolve(data);
     };
-    script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cbName + '&t=' + Date.now();
     script.onerror = () => {
-      clearTimeout(timeout); delete window[cbName]; document.body.removeChild(script);
+      clearTimeout(timeout);
+      try { document.body.removeChild(script); } catch(e){}
+      delete window[cbName];
       reject(new Error('Script error'));
     };
+    script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cbName + '&t=' + Date.now();
     document.body.appendChild(script);
   });
 }
@@ -173,11 +182,12 @@ async function loadData() {
   btn.style.opacity = '0.5';
   btn.innerText = '↻ Loading...';
   try {
-    const [engData, clientData] = await Promise.all([
-      fetchJSONP(ENGINEERS_SCRIPT),
-      fetchJSONP(CLIENTS_SCRIPT)
-    ]);
-    allData = [...engData, ...clientData];
+    const data = await fetchJSONP(SCRIPT);
+    // Filter out completely empty rows
+    allData = data.filter(r => {
+      const ts = r['Timestamp'] || '';
+      return ts.toString().trim() !== '';
+    });
     document.getElementById('loading').style.display = 'none';
     document.getElementById('content').style.display = 'block';
     refreshUI();
@@ -192,7 +202,8 @@ function refreshUI() { renderOverview(); updateStats(); renderTable(); }
 
 function getVal(obj, ...keys) {
   for (let key of keys) {
-    if (obj[key] !== undefined && obj[key] !== null) return obj[key].toString().trim();
+    if (obj[key] !== undefined && obj[key] !== null && obj[key].toString().trim() !== '')
+      return obj[key].toString().trim();
   }
   return "";
 }
@@ -207,13 +218,17 @@ function calculateDuration(start, end) {
   return diffDays > 0 ? `${diffDays}d ${diffHrs % 24}h` : `${diffHrs}h`;
 }
 
+function getStatus(r) {
+  return getVal(r, 'Current Status', 'Status') || 'New';
+}
+
 function renderOverview() {
   const grid = document.getElementById('overview-grid');
   grid.innerHTML = `<div class="eng-card ${currentEngineer==='all'?'active':''}" onclick="selectEng('all')">
     <div class="eng-card-name" style="color:var(--accent)">Full Team</div>
     <div style="font-size:11px;color:var(--muted)">${allData.length} Total Tickets</div>
   </div>` + ENGINEERS.map(eng => {
-    const count = allData.filter(r => getVal(r,'Name').trim() === eng.name).length;
+    const count = allData.filter(r => getVal(r,'Name') === eng.name).length;
     return `<div class="eng-card ${currentEngineer===eng.name?'active':''}" onclick="selectEng('${eng.name}')">
       <div class="eng-card-name" style="color:${eng.color}">${eng.name}</div>
       <div style="font-size:11px;color:var(--muted)">${count} Records</div>
@@ -229,13 +244,13 @@ function selectEng(name) {
 }
 
 function updateStats() {
-  const tickets = currentEngineer === 'all' ? allData : allData.filter(r => getVal(r,'Name').trim() === currentEngineer);
+  const tickets = currentEngineer === 'all' ? allData : allData.filter(r => getVal(r,'Name') === currentEngineer);
   const c = {closed:0, open:0, inprogress:0, waiting:0};
   tickets.forEach(r => {
-    const s = getVal(r,'Current Status','Status').toLowerCase();
-    if(s.includes('closed')) c.closed++;
-    else if(s.includes('in progress')) c.inprogress++;
-    else if(s.includes('waiting')) c.waiting++;
+    const s = getStatus(r).toLowerCase();
+    if(s === 'closed') c.closed++;
+    else if(s === 'in progress') c.inprogress++;
+    else if(s === 'waiting') c.waiting++;
     else c.open++;
   });
   document.getElementById('count-closed').innerText = c.closed;
@@ -256,84 +271,72 @@ function toggleSlice(status) {
   renderTable();
 }
 
-// ✅ Assign engineer → saves to Engineers Sheet
 async function assignEngineer(realIndex, selectEl, btnEl) {
   const engineerName = selectEl.value;
-  if (!engineerName) { showToast('⚠ Please select an engineer!', '#ff6b35'); return; }
-
+  if (!engineerName) { showToast('⚠ Select an engineer first!', '#ff6b35'); return; }
   btnEl.disabled = true;
   btnEl.innerText = 'Saving...';
-
   const ticket = allData[realIndex];
-  const timestamp = getVal(ticket, 'Timestamp');
-
+  const timestamp = getVal(ticket,'Timestamp');
   try {
-    await fetchJSONP(ENGINEERS_SCRIPT + '?action=assign&timestamp=' + encodeURIComponent(timestamp) + '&name=' + encodeURIComponent(engineerName));
+    await fetchJSONP(SCRIPT + '?action=assign&timestamp=' + encodeURIComponent(timestamp) + '&name=' + encodeURIComponent(engineerName));
     allData[realIndex]['Name'] = engineerName;
     allData[realIndex]['Current Status'] = 'In Progress';
     showToast('✅ Assigned to ' + engineerName + ' → In Progress');
   } catch(e) {
-    // Update locally even if save fails
     allData[realIndex]['Name'] = engineerName;
     allData[realIndex]['Current Status'] = 'In Progress';
-    showToast('⚠ Saved locally only', '#f0b429');
+    showToast('⚠ Updated locally — sheet may not have saved', '#f0b429');
   }
   refreshUI();
 }
 
-// ✅ Update status → saves to Engineers Sheet
 async function updateStatus(realIndex, newStatus, selectEl) {
   selectEl.disabled = true;
-
   const ticket = allData[realIndex];
-  const timestamp = getVal(ticket, 'Timestamp');
-
+  const timestamp = getVal(ticket,'Timestamp');
   try {
-    await fetchJSONP(ENGINEERS_SCRIPT + '?action=updateStatus&timestamp=' + encodeURIComponent(timestamp) + '&status=' + encodeURIComponent(newStatus));
+    await fetchJSONP(SCRIPT + '?action=updateStatus&timestamp=' + encodeURIComponent(timestamp) + '&status=' + encodeURIComponent(newStatus));
     allData[realIndex]['Current Status'] = newStatus;
     allData[realIndex]['Status'] = newStatus;
-    if (newStatus !== 'Waiting') allData[realIndex]['_spareParts'] = '';
-    showToast('✅ Status updated to: ' + (newStatus === 'Waiting' ? 'Waiting for Spare Parts' : newStatus));
+    if(newStatus !== 'Waiting') allData[realIndex]['_spareParts'] = '';
+    showToast('✅ Status: ' + (newStatus === 'Waiting' ? 'Waiting for Spare Parts' : newStatus));
   } catch(e) {
     allData[realIndex]['Current Status'] = newStatus;
-    showToast('⚠ Saved locally only', '#f0b429');
+    showToast('⚠ Updated locally — sheet may not have saved', '#f0b429');
   }
   refreshUI();
 }
 
-// ✅ Save spare parts → saves to Engineers Sheet
 async function saveSpareParts(realIndex, inputEl, btnEl) {
   const parts = inputEl.value.trim();
-  if (!parts) { showToast('⚠ Please enter spare parts!', '#ff6b35'); return; }
-
+  if (!parts) { showToast('⚠ Enter spare parts first!', '#ff6b35'); return; }
   btnEl.disabled = true;
   btnEl.innerText = 'Saving...';
-
   const ticket = allData[realIndex];
-  const timestamp = getVal(ticket, 'Timestamp');
-
+  const timestamp = getVal(ticket,'Timestamp');
   try {
-    await fetchJSONP(ENGINEERS_SCRIPT + '?action=updateStatus&timestamp=' + encodeURIComponent(timestamp) + '&status=Waiting&spareParts=' + encodeURIComponent(parts));
+    await fetchJSONP(SCRIPT + '?action=updateStatus&timestamp=' + encodeURIComponent(timestamp) + '&status=Waiting&spareParts=' + encodeURIComponent(parts));
     allData[realIndex]['_spareParts'] = parts;
     showToast('🔧 Spare parts saved!');
   } catch(e) {
     allData[realIndex]['_spareParts'] = parts;
-    showToast('⚠ Saved locally only', '#f0b429');
+    showToast('⚠ Updated locally — sheet may not have saved', '#f0b429');
   }
   refreshUI();
 }
 
 function renderTable() {
-  let tickets = currentEngineer === 'all' ? allData : allData.filter(r => getVal(r,'Name').trim() === currentEngineer);
+  let tickets = currentEngineer === 'all' ? allData : allData.filter(r => getVal(r,'Name') === currentEngineer);
 
   if (selectedStatuses.length > 0) {
     tickets = tickets.filter(r => {
-      const s = getVal(r,'Current Status','Status').toLowerCase();
+      const s = getStatus(r).toLowerCase();
       return selectedStatuses.some(status => {
-        if (status === 'Waiting') return s.includes('waiting');
-        if (status === 'New') return (s.includes('new') || s === '');
-        if (status === 'In Progress') return s.includes('in progress');
-        if (status === 'Closed') return s.includes('closed');
+        if (status === 'Waiting') return s === 'waiting';
+        if (status === 'New') return s === 'new' || s === '';
+        if (status === 'In Progress') return s === 'in progress';
+        if (status === 'Closed') return s === 'closed';
         return false;
       });
     });
@@ -342,51 +345,59 @@ function renderTable() {
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = tickets.map((r, i) => {
     const nameVal = getVal(r,'Name');
-    const statusVal = getVal(r,'Current Status','Status') || 'New';
-    const isUnassigned = (nameVal === '');
+    const statusVal = getStatus(r);
+    const isUnassigned = nameVal === '';
     const realIndex = allData.indexOf(r);
-    const spareParts = r['_spareParts'] || getVal(r,'What spare part is needed?') || '';
-    const isWaiting = statusVal.toLowerCase().includes('waiting');
+    const spareParts = r['_spareParts'] || getVal(r,'What spare part is needed?');
+    const isWaiting = statusVal.toLowerCase() === 'waiting';
     const engColor = ENGINEERS.find(e => e.name === nameVal)?.color || 'var(--text)';
 
     let bc = 'badge-new';
-    if(statusVal.toLowerCase().includes('closed')) bc = 'badge-closed';
-    else if(statusVal.toLowerCase().includes('in progress')) bc = 'badge-inprogress';
-    else if(statusVal.toLowerCase().includes('waiting')) bc = 'badge-waiting';
+    if(statusVal.toLowerCase() === 'closed') bc = 'badge-closed';
+    else if(statusVal.toLowerCase() === 'in progress') bc = 'badge-inprogress';
+    else if(statusVal.toLowerCase() === 'waiting') bc = 'badge-waiting';
     if(isUnassigned) bc = 'badge-unassigned';
 
     const assigneeCell = isUnassigned
       ? `<div class="assign-wrap">
           <select class="assign-select" id="sel-${realIndex}">
             <option value="">⚠ Assign to...</option>
-            ${ENGINEERS.map(e => `<option value="${e.name}">${e.name}</option>`).join('')}
+            ${ENGINEERS.map(e=>`<option value="${e.name}">${e.name}</option>`).join('')}
           </select>
-          <button class="assign-btn" id="abtn-${realIndex}" onclick="assignEngineer(${realIndex}, document.getElementById('sel-${realIndex}'), document.getElementById('abtn-${realIndex}'))">Assign ✓</button>
+          <button class="assign-btn" id="abtn-${realIndex}"
+            onclick="assignEngineer(${realIndex},document.getElementById('sel-${realIndex}'),document.getElementById('abtn-${realIndex}'))">
+            Assign ✓
+          </button>
         </div>`
       : `<span style="font-weight:700;color:${engColor}">${nameVal}</span>`;
 
     const statusCell = isUnassigned
       ? `<span class="status-badge ${bc}">Awaiting Engineer</span>`
-      : `<select class="status-select" onchange="updateStatus(${realIndex}, this.value, this)">
-          ${STATUS_OPTIONS.map(s => `<option value="${s}" ${statusVal===s?'selected':''}>${s==='Waiting'?'Waiting for Spare Parts':s}</option>`).join('')}
+      : `<select class="status-select" onchange="updateStatus(${realIndex},this.value,this)">
+          ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${statusVal===s?'selected':''}>${s==='Waiting'?'Waiting for Spare Parts':s}</option>`).join('')}
         </select>`;
 
     const spareCell = isWaiting
-      ? `<div>
-          ${spareParts ? `<div class="spare-parts-cell">🔧 ${spareParts}</div>` : ''}
-          <input class="spare-input" id="spare-${realIndex}" placeholder="Enter spare parts..." value="${spareParts}"/>
-          <br><button class="save-btn" id="sbtn-${realIndex}" onclick="saveSpareParts(${realIndex}, document.getElementById('spare-${realIndex}'), document.getElementById('sbtn-${realIndex}'))">💾 Save</button>
+      ? `<div class="spare-wrap">
+          ${spareParts ? `<span class="spare-text">🔧 ${spareParts}</span>` : ''}
+          <input class="spare-input" id="spare-${realIndex}" placeholder="Enter parts..." value="${spareParts}"/>
+          <button class="save-btn" id="sbtn-${realIndex}"
+            onclick="saveSpareParts(${realIndex},document.getElementById('spare-${realIndex}'),document.getElementById('sbtn-${realIndex}'))">
+            💾 Save
+          </button>
         </div>`
-      : `<span class="spare-parts-cell">${spareParts ? '🔧 ' + spareParts : '-'}</span>`;
+      : `<span class="spare-text">${spareParts ? '🔧 '+spareParts : '-'}</span>`;
 
     return `<tr>
       <td>${i+1}</td>
       <td>${assigneeCell}</td>
-      <td>${getVal(r,'Clinic/Hospital Name','Customer/Account Name') || '-'}</td>
+      <td>${getVal(r,'Customer/Account Name','Clinic/Hospital Name') || '-'}</td>
       <td>${statusCell}</td>
       <td>${spareCell}</td>
-      <td><span style="color:var(--accent3)">${calculateDuration(getVal(r,'Timestamp','Request Date'), getVal(r,'Closing Date'))}</span></td>
-      <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">${getVal(r,'Description of the Technical Issue','Problem Description') || '-'}</td>
+      <td><span style="color:var(--accent3)">${calculateDuration(getVal(r,'Timestamp'), getVal(r,'Closing Date'))}</span></td>
+      <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">
+        ${getVal(r,'Problem Description','Description of the Technical Issue') || '-'}
+      </td>
     </tr>`;
   }).join('');
 }
