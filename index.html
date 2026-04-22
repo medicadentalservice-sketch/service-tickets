@@ -1,7 +1,134 @@
-// Link 1: Your Main Database
-const SCRIPT_URL_MAIN = "https://script.google.com/macros/s/AKfycbxjKYbJDYGnxVctc20i5d2NdYijCLHWWEqE8LzHS7yRdGRP8GHioFcWfg6X7ai36xLR/exec";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — IT & Engineering</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10; --surface: #111318; --surface2: #181c23; --border: #ffffff0f;
+    --accent: #00e5a0; --accent3: #4d9fff; --text: #f0f2f7; --muted: #6b7280;
+    --closed: #00e5a0; --open: #4d9fff; --inprogress: #f0b429; --waiting: #ff6b35;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Mono',monospace; background:var(--bg); color:var(--text); min-height:100vh; }
+  body::before { content:''; position:fixed; inset:0; background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
+  .container { position:relative; z-index:1; max-width:1200px; margin:0 auto; padding:40px 24px; }
+  header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:32px; flex-wrap:wrap; gap:20px; }
+  .logo-area h1 { font-family:'Syne',sans-serif; font-size:24px; font-weight:800; }
+  .logo-area h1 span { color:var(--accent); }
+  .logo-area p { font-size:11px; color:var(--muted); margin-top:4px; letter-spacing:2px; text-transform:uppercase; }
+  
+  #loading { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; gap:20px; }
+  .spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  #content { display:none; animation:fadeIn .4s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)} }
 
-// Link 2: The New Request Form (The link you just sent)
+  .overview-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:28px; }
+  @media(max-width:900px){ .overview-grid { grid-template-columns:repeat(2,1fr); } }
+  .eng-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; cursor:pointer; transition:all .2s; position:relative; }
+  .eng-card:hover { transform:translateY(-3px); background:var(--surface2); }
+  .eng-card-name { font-family:'Syne',sans-serif; font-size:15px; font-weight:800; margin-bottom:12px; }
+
+  .eng-tabs { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:28px; }
+  .eng-tab { background:var(--surface); border:1px solid var(--border); border-radius:100px; padding:10px 20px; cursor:pointer; font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:var(--muted); border:none; transition: 0.2s; }
+  
+  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+  @media(max-width:700px){ .stats-grid { grid-template-columns:repeat(2,1fr); } }
+  
+  .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; position:relative; cursor:pointer; transition:all 0.2s; opacity: 0.4; }
+  .stat-card:hover { transform:translateY(-2px); background:var(--surface2); opacity: 0.8; }
+  .stat-card.active-slice { border: 1px solid white; opacity: 1; transform: scale(1.02); }
+  .stat-card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; }
+  .stat-card.closed::after { background:var(--closed); }
+  .stat-card.open::after { background:var(--open); }
+  .stat-card.inprogress::after { background:var(--inprogress); }
+  .stat-card.waiting::after { background:var(--waiting); }
+  .stat-value { font-family:'Syne',sans-serif; font-size:42px; font-weight:800; line-height:1; }
+
+  .table-section { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+  .table-scroll { overflow-x: auto; }
+  table { width:100%; border-collapse:collapse; font-size:12px; min-width: 800px; }
+  th { padding:12px 16px; text-align:left; background:var(--surface2); color:var(--muted); text-transform:uppercase; font-size:10px; }
+  td { padding:12px 16px; border-bottom:1px solid var(--border); }
+  .status-badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:100px; font-size:10px; font-weight:600; }
+  .status-badge::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; }
+  .badge-closed { background:#00e5a015; color:var(--closed); border:1px solid #00e5a030; }
+  .badge-new { background:#4d9fff15; color:var(--open); border:1px solid #4d9fff30; }
+  .badge-inprogress { background:#f0b42915; color:var(--inprogress); border:1px solid #f0b42930; }
+  .badge-waiting { background:#ff6b3515; color:var(--waiting); border:1px solid #ff6b3530; }
+  .badge-unassigned { background:#ff00ff15; color:#ff00ff; border:1px solid #ff00ff30; }
+
+  .time-text { font-size:11px; font-weight:700; color:var(--accent3); }
+  .refresh-btn { background:var(--accent); border:none; color:#000; padding:10px 20px; border-radius:8px; cursor:pointer; font-family:'Syne',sans-serif; font-size:12px; font-weight:700; }
+  .spinning span { animation:spin 0.8s linear infinite; display:inline-block; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo-area">
+      <h1>Service <span>Tickets</span></h1>
+      <p>Dashboard</p>
+    </div>
+    <button class="refresh-btn" onclick="loadData()" id="rbtn"><span>↻</span> Refresh</button>
+  </header>
+
+  <div id="loading"><div class="spinner"></div><p>Syncing all records...</p></div>
+
+  <div id="content">
+    <div class="section-title" style="margin-bottom:15px; font-size:11px; text-transform:uppercase; color:var(--muted); letter-spacing:2px;">Team Overview</div>
+    <div class="overview-grid" id="overview-grid"></div>
+    <div class="eng-tabs" id="eng-tabs"></div>
+
+    <div style="font-family:Syne; font-size:20px; font-weight:800; margin-bottom:10px; color:var(--accent);" id="view-title">All Staff</div>
+    <p style="font-size: 10px; color: var(--muted); margin-bottom: 20px;">Tracking live requests and database assignments.</p>
+
+    <div class="stats-grid">
+      <div class="stat-card closed active-slice" id="btn-Closed" onclick="toggleSlice('Closed')">
+        <div style="font-size:10px; color:var(--muted); text-transform:uppercase; margin-bottom:10px;">Resolved</div>
+        <div class="stat-value" style="color:var(--closed)" id="count-closed">0</div>
+      </div>
+      <div class="stat-card open active-slice" id="btn-New" onclick="toggleSlice('New')">
+        <div style="font-size:10px; color:var(--muted); text-transform:uppercase; margin-bottom:10px;">New / Unassigned</div>
+        <div class="stat-value" style="color:var(--open)" id="count-open">0</div>
+      </div>
+      <div class="stat-card inprogress active-slice" id="btn-In Progress" onclick="toggleSlice('In Progress')">
+        <div style="font-size:10px; color:var(--muted); text-transform:uppercase; margin-bottom:10px;">Working</div>
+        <div class="stat-value" style="color:var(--inprogress)" id="count-inprogress">0</div>
+      </div>
+      <div class="stat-card waiting active-slice" id="btn-Waiting" onclick="toggleSlice('Waiting')">
+        <div style="font-size:10px; color:var(--muted); text-transform:uppercase; margin-bottom:10px;">Pending</div>
+        <div class="stat-value" style="color:var(--waiting)" id="count-waiting">0</div>
+      </div>
+    </div>
+
+    <div class="table-section">
+      <div style="padding:15px 20px; background:var(--surface2); font-size:11px; color:var(--muted); border-bottom:1px solid var(--border);" id="table-info"></div>
+      <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Clinic</th>
+            <th>Status</th>
+            <th>Time Info</th>
+            <th>Problem Description</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// BOTH SCRIPTS DEFINED HERE
+const SCRIPT_URL_MAIN = "https://script.google.com/macros/s/AKfycbxjKYbJDYGnxVctc20i5d2NdYijCLHWWEqE8LzHS7yRdGRP8GHioFcWfg6X7ai36xLR/exec";
 const SCRIPT_URL_NEW = "https://script.google.com/macros/s/AKfycbwcTd1Fm2G_NUocdxNtpHqXNmFkSTukJlCGLV00xAbrcbEJ_hL8OmthPFtBUbVJMH3W6w/exec";
 
 const ENGINEERS = [
@@ -19,27 +146,139 @@ window.onload = () => loadData();
 async function loadData() {
   const btn = document.getElementById('rbtn');
   btn.classList.add('spinning');
-  
   try {
-    // We fetch from BOTH links at the same time
     const [res1, res2] = await Promise.all([
       fetch(SCRIPT_URL_MAIN + "?t=" + Date.now()),
       fetch(SCRIPT_URL_NEW + "?t=" + Date.now())
     ]);
-
     const data1 = await res1.json();
     const data2 = await res2.json();
-
-    // Combine them into one list for the dashboard
     allData = [...data1, ...data2];
-
+    
     document.getElementById('loading').style.display = 'none';
     document.getElementById('content').style.display = 'block';
     refreshUI();
-  } catch(e) { 
-    console.error("Error syncing sheets:", e);
-    alert("Check permissions on both Google Scripts.");
-  }
-  
+  } catch(e) { console.error("Sync failed:", e); }
   btn.classList.remove('spinning');
 }
+
+function refreshUI() {
+  renderOverview();
+  renderTabs();
+  updateStats();
+  renderTable();
+}
+
+function calculateDuration(start, end) {
+  const s = new Date(start);
+  const e = end ? new Date(end) : new Date();
+  if (isNaN(s.getTime())) return '-';
+  const diffMs = e - s;
+  const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHrs / 24);
+  return diffDays > 0 ? `${diffDays}d ${diffHrs % 24}h` : `${diffHrs}h`;
+}
+
+function renderOverview() {
+  const grid = document.getElementById('overview-grid');
+  grid.innerHTML = ENGINEERS.map(eng => {
+    const t = allData.filter(r => (r['Name']||'').trim() === eng.name);
+    return `<div class="eng-card" onclick="selectEng('${eng.name}')">
+      <div class="eng-card-name" style="color:${eng.color}">${eng.name}</div>
+      <div style="font-size:11px; color:var(--muted)">${t.length} Total</div>
+      <div style="position:absolute; bottom:0; left:0; right:0; height:3px; background:${eng.color}"></div>
+    </div>`;
+  }).join('');
+}
+
+function renderTabs() {
+  const tabs = document.getElementById('eng-tabs');
+  const items = [{name:'All Staff', key:'all', color:'var(--accent)'}, ...ENGINEERS.map(e=>({name:e.name, key:e.name, color:e.color}))];
+  tabs.innerHTML = items.map(e => `
+    <button class="eng-tab" onclick="selectEng('${e.key}')" 
+      style="${currentEngineer===e.key ? `background:${e.color}; color:#000;` : `background:var(--surface); color:var(--muted);` }">
+      ${e.name}
+    </button>`).join('');
+}
+
+function selectEng(key) {
+  currentEngineer = key;
+  document.getElementById('view-title').innerText = key === 'all' ? "All Staff" : key;
+  refreshUI();
+}
+
+function updateStats() {
+  const tickets = currentEngineer === 'all' ? allData : allData.filter(r => (r['Name']||'').trim() === currentEngineer);
+  const c = {closed:0, open:0, inprogress:0, waiting:0};
+  
+  tickets.forEach(r => {
+    const s = (r['Current Status'] || 'New').toLowerCase();
+    if(s.includes('closed')) c.closed++;
+    else if(s.includes('new') || s === '') c.open++;
+    else if(s.includes('in progress')) c.inprogress++;
+    else if(s.includes('waiting')) c.waiting++;
+  });
+  
+  document.getElementById('count-closed').innerText = c.closed;
+  document.getElementById('count-open').innerText = c.open;
+  document.getElementById('count-inprogress').innerText = c.inprogress;
+  document.getElementById('count-waiting').innerText = c.waiting;
+}
+
+function toggleSlice(status) {
+  const index = selectedStatuses.indexOf(status);
+  if (index > -1) {
+    selectedStatuses.splice(index, 1);
+    document.getElementById('btn-' + status).classList.remove('active-slice');
+  } else {
+    selectedStatuses.push(status);
+    document.getElementById('btn-' + status).classList.add('active-slice');
+  }
+  renderTable();
+}
+
+function renderTable() {
+  let tickets = currentEngineer === 'all' ? allData : allData.filter(r => (r['Name']||'').trim() === currentEngineer);
+  
+  if (selectedStatuses.length > 0) {
+    tickets = tickets.filter(r => {
+      const s = (r['Current Status'] || 'New').toLowerCase();
+      return selectedStatuses.some(status => {
+        if (status === 'Waiting') return s.includes('waiting');
+        if (status === 'New') return (s.includes('new') || s === '');
+        return s === status.toLowerCase();
+      });
+    });
+  } else {
+    tickets = [];
+  }
+
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = tickets.map((r, i) => {
+    const statusVal = r['Current Status'] || 'New';
+    const isUnassigned = (!r['Name'] || r['Name'] === '');
+    
+    let bc = 'badge-new';
+    if(statusVal.toLowerCase().includes('closed')) bc = 'badge-closed';
+    else if(statusVal.toLowerCase().includes('in progress')) bc = 'badge-inprogress';
+    else if(statusVal.toLowerCase().includes('waiting')) bc = 'badge-waiting';
+    if(isUnassigned) bc = 'badge-unassigned';
+
+    const startTime = r['Timestamp'] || r['Request Date'];
+    const duration = calculateDuration(startTime, r['Closing Date']);
+
+    return `<tr>
+      <td>${i+1}</td>
+      <td style="font-weight:700;">${r['Name'] || '<span style="color:#ff00ff">Unassigned</span>'}</td>
+      <td>${r['Clinic/Hospital Name'] || r['Customer/Account Name'] || '-'}</td>
+      <td><span class="status-badge ${bc}">${isUnassigned ? 'Unassigned' : statusVal}</span></td>
+      <td><span class="time-text">${duration}</span> <small style="color:var(--muted)">${statusVal.toLowerCase().includes('closed') ? '(Resolved)' : '(Age)'}</small></td>
+      <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${r['Description of the Technical Issue'] || r['Problem Description'] || '-'}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('table-info').innerText = `Displaying ${tickets.length} records. Filters: [${selectedStatuses.join(', ')}]`;
+}
+</script>
+</body>
+</html>
