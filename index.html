@@ -108,8 +108,11 @@
 </div>
 
 <script>
-const SCRIPT_URL_MAIN = "https://script.google.com/macros/s/AKfycbw4ckrzt4KDHSJaEKx3ePWdPruJHh51BePCv2ZTkLPfrx3NgDG1BGr_qDxCHJs-5Fqi/exec";
-const SCRIPT_URL_NEW  = "https://script.google.com/macros/s/AKfycbwhXZk66AYH5KT1cxBt2qyAqNI93dhmvLvQ6WsXSe353ilBUj8-ivGskw6jSpWpDf0V/exec";
+// ✅ Script 1 - New Form Responses Sheet (NEW URL)
+const SCRIPT_URL_NEW  = "https://script.google.com/macros/s/AKfycbyRLu4wnsB7cjQz73pfv71ghfinH6BpE5kwmoTp4NHgajSbXfdqt-agAj_fYfZsmEYm/exec";
+
+// ✅ Script 2 - Main Service Ticket Sheet (NEW URL)
+const SCRIPT_URL_MAIN = "https://script.google.com/macros/s/AKfycbwJ3PfGotrfcMwKc-x-9Lx3Y8xgl3JoOXl3q0OMzqU_3_dH4by29G2NJyRrvmuv6ZIUbQ/exec";
 
 const ENGINEERS = [
   {name:"Shakeel", color:"#4d9fff"}, {name:"Sam", color:"#00e5a0"},
@@ -123,7 +126,6 @@ let selectedStatuses = ['Closed', 'New', 'In Progress', 'Waiting'];
 
 window.onload = () => loadData();
 
-// ✅ JSONP loader — bypasses CORS for Google Apps Script
 function fetchJSONP(url) {
   return new Promise((resolve, reject) => {
     const cbName = 'cb_' + Math.random().toString(36).substr(2, 9);
