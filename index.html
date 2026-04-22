@@ -15,8 +15,8 @@
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:'DM Mono',monospace; background:var(--bg); color:var(--text); min-height:100vh; }
   body::before { content:''; position:fixed; inset:0; background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
-  .container { position:relative; z-index:1; max-width:1200px; margin:0 auto; padding:40px 24px; }
-  header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:32px; flex-wrap:wrap; gap:20px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+  .container { position:relative; z-index:1; max-width:1400px; margin:0 auto; padding:40px 24px; }
+  header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:32px; flex-wrap:wrap; gap:20px; border-bottom:1px solid var(--border); padding-bottom:20px; }
   .logo-area h1 { font-family:'Syne',sans-serif; font-size:24px; font-weight:800; }
   .logo-area h1 span { color:var(--accent); }
   #loading { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; gap:20px; }
@@ -24,57 +24,45 @@
   @keyframes spin { to{transform:rotate(360deg)} }
   #content { display:none; animation:fadeIn .4s ease; }
   @keyframes fadeIn { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)} }
-  .overview-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px; margin-bottom:28px; }
-  .eng-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; cursor:pointer; transition:all .2s; position:relative; overflow: hidden; }
+  .overview-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:28px; }
+  .eng-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; cursor:pointer; transition:all .2s; position:relative; overflow:hidden; }
   .eng-card:hover { transform:translateY(-3px); background:var(--surface2); }
-  .eng-card.active { border: 1px solid white; background: var(--surface2); }
+  .eng-card.active { border:1px solid white; background:var(--surface2); }
   .eng-card-name { font-family:'Syne',sans-serif; font-size:15px; font-weight:800; margin-bottom:12px; }
   .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
   @media(max-width:700px){ .stats-grid { grid-template-columns:repeat(2,1fr); } }
-  .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; position:relative; cursor:pointer; transition:all 0.2s; opacity: 0.5; }
-  .stat-card.active-slice { border: 1px solid white; opacity: 1; transform: scale(1.02); }
+  .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; position:relative; cursor:pointer; transition:all 0.2s; opacity:0.5; }
+  .stat-card.active-slice { border:1px solid white; opacity:1; transform:scale(1.02); }
   .stat-card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:3px; }
-  .stat-card.closed::after { background:var(--closed); }
   .stat-card.open::after { background:var(--open); }
   .stat-card.inprogress::after { background:var(--inprogress); }
   .stat-card.waiting::after { background:var(--waiting); }
-  .stat-value { font-family:'Syne',sans-serif; font-size:42px; font-weight:800; line-height:1; margin-top: 10px; }
+  .stat-card.closed::after { background:var(--closed); }
+  .stat-value { font-family:'Syne',sans-serif; font-size:42px; font-weight:800; line-height:1; margin-top:10px; }
   .table-section { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
-  .table-scroll { overflow-x: auto; }
-  table { width:100%; border-collapse:collapse; font-size:12px; min-width: 850px; }
+  .table-scroll { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:12px; min-width:1000px; }
   th { padding:12px 16px; text-align:left; background:var(--surface2); color:var(--muted); text-transform:uppercase; font-size:10px; }
-  td { padding:12px 16px; border-bottom:1px solid var(--border); }
+  td { padding:10px 16px; border-bottom:1px solid var(--border); vertical-align:middle; }
   .status-badge { display:inline-flex; align-items:center; gap:5px; padding:4px 12px; border-radius:100px; font-size:10px; font-weight:700; }
   .badge-closed { background:#00e5a015; color:var(--closed); border:1px solid #00e5a030; }
   .badge-new { background:#4d9fff15; color:var(--open); border:1px solid #4d9fff30; }
   .badge-inprogress { background:#f0b42915; color:var(--inprogress); border:1px solid #f0b42930; }
   .badge-waiting { background:#ff6b3515; color:var(--waiting); border:1px solid #ff6b3530; }
-  .badge-unassigned { background:#ff00ff15; color:var(--unassigned); border:1px solid #ff00ff40; animation: pulse 2s infinite; }
-  @keyframes pulse { 0%{opacity:1} 50%{opacity:0.6} 100%{opacity:1} }
+  .badge-unassigned { background:#ff00ff15; color:var(--unassigned); border:1px solid #ff00ff40; animation:pulse 2s infinite; }
+  @keyframes pulse { 0%{opacity:1}50%{opacity:0.6}100%{opacity:1} }
   .refresh-btn { background:var(--accent); border:none; color:#000; padding:10px 20px; border-radius:8px; cursor:pointer; font-family:'Syne',sans-serif; font-size:12px; font-weight:700; }
-
-  /* Assignment dropdown */
   .assign-wrap { display:flex; align-items:center; gap:8px; }
-  .assign-select {
-    background: #1a0a1a; color: var(--unassigned); border: 1px solid #ff00ff40;
-    border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace;
-    font-size:11px; cursor:pointer; outline:none;
-    animation: pulse 2s infinite;
-  }
-  .assign-select:hover { background:#2a0a2a; border-color:var(--unassigned); }
-  .assign-btn {
-    background:var(--unassigned); color:#000; border:none;
-    border-radius:6px; padding:4px 10px; font-family:'Syne',sans-serif;
-    font-size:10px; font-weight:800; cursor:pointer; transition:all .2s;
-    white-space:nowrap;
-  }
+  .assign-select { background:#1a0a1a; color:var(--unassigned); border:1px solid #ff00ff40; border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; outline:none; animation:pulse 2s infinite; }
+  .assign-btn { background:var(--unassigned); color:#000; border:none; border-radius:6px; padding:4px 10px; font-family:'Syne',sans-serif; font-size:10px; font-weight:800; cursor:pointer; transition:all .2s; }
   .assign-btn:hover { opacity:0.8; transform:scale(1.05); }
-  .assigning { opacity:0.5; pointer-events:none; }
-
-  /* Toast notification */
-  #toast { position:fixed; bottom:30px; right:30px; background:var(--accent); color:#000;
-    padding:12px 20px; border-radius:10px; font-family:'Syne',sans-serif; font-weight:800;
-    font-size:13px; transform:translateY(100px); opacity:0; transition:all .3s; z-index:999; }
+  .status-select { background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; outline:none; width:100%; }
+  .status-select:hover { border-color:var(--accent); }
+  .spare-input { background:var(--surface2); color:var(--text); border:1px solid var(--waiting); border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace; font-size:11px; outline:none; width:140px; margin-top:4px; }
+  .spare-input::placeholder { color:var(--muted); }
+  .save-btn { background:var(--waiting); color:#000; border:none; border-radius:6px; padding:3px 8px; font-family:'Syne',sans-serif; font-size:10px; font-weight:800; cursor:pointer; margin-top:4px; }
+  .spare-parts-cell { color:var(--waiting); font-size:11px; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #toast { position:fixed; bottom:30px; right:30px; background:var(--accent); color:#000; padding:12px 20px; border-radius:10px; font-family:'Syne',sans-serif; font-weight:800; font-size:13px; transform:translateY(100px); opacity:0; transition:all .3s; z-index:999; }
   #toast.show { transform:translateY(0); opacity:1; }
 </style>
 </head>
@@ -83,7 +71,7 @@
   <header>
     <div class="logo-area">
       <h1>Service <span>Tickets</span></h1>
-      <p style="font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:2px; margin-top:5px;">Dashboard</p>
+      <p style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-top:5px;">Dashboard</p>
     </div>
     <button class="refresh-btn" onclick="loadData()" id="rbtn">↻ Refresh</button>
   </header>
@@ -92,32 +80,40 @@
 
   <div id="content">
     <div class="overview-grid" id="overview-grid"></div>
-    <div style="font-family:Syne; font-size:18px; font-weight:800; margin-bottom:20px; color:var(--accent);" id="view-title">All Staff Overview</div>
+    <div style="font-family:Syne;font-size:18px;font-weight:800;margin-bottom:20px;color:var(--accent);" id="view-title">All Staff Overview</div>
+
+    <!-- FILTERS: New → In Progress → Waiting for Spare Parts → Closed -->
     <div class="stats-grid">
-      <div class="stat-card closed active-slice" id="btn-Closed" onclick="toggleSlice('Closed')">
-        <small style="color:var(--muted)">RESOLVED</small>
-        <div class="stat-value" id="count-closed">0</div>
-      </div>
       <div class="stat-card open active-slice" id="btn-New" onclick="toggleSlice('New')">
-        <small style="color:var(--muted)">OPEN / NEW</small>
+        <small style="color:var(--muted)">NEW</small>
         <div class="stat-value" id="count-open">0</div>
       </div>
       <div class="stat-card inprogress active-slice" id="btn-In Progress" onclick="toggleSlice('In Progress')">
-        <small style="color:var(--muted)">WORKING</small>
+        <small style="color:var(--muted)">IN PROGRESS</small>
         <div class="stat-value" id="count-inprogress">0</div>
       </div>
       <div class="stat-card waiting active-slice" id="btn-Waiting" onclick="toggleSlice('Waiting')">
-        <small style="color:var(--muted)">PENDING</small>
+        <small style="color:var(--muted)">WAITING FOR SPARE PARTS</small>
         <div class="stat-value" id="count-waiting">0</div>
       </div>
+      <div class="stat-card closed active-slice" id="btn-Closed" onclick="toggleSlice('Closed')">
+        <small style="color:var(--muted)">CLOSED</small>
+        <div class="stat-value" id="count-closed">0</div>
+      </div>
     </div>
+
     <div class="table-section">
       <div class="table-scroll">
         <table>
           <thead>
             <tr>
-              <th>#</th><th>Assignee</th><th>Account/Clinic</th>
-              <th>Status</th><th>Duration</th><th>Description</th>
+              <th>#</th>
+              <th>Assignee</th>
+              <th>Account/Clinic</th>
+              <th>Status</th>
+              <th>Spare Parts</th>
+              <th>Duration</th>
+              <th>Description</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -126,7 +122,6 @@
     </div>
   </div>
 </div>
-
 <div id="toast"></div>
 
 <script>
@@ -134,14 +129,16 @@ const SCRIPT_URL_NEW  = "https://script.google.com/macros/s/AKfycbyRLu4wnsB7cjQz
 const SCRIPT_URL_MAIN = "https://script.google.com/macros/s/AKfycbwJ3PfGotrfcMwKc-x-9Lx3Y8xgl3JoOXl3q0OMzqU_3_dH4by29G2NJyRrvmuv6ZIUbQ/exec";
 
 const ENGINEERS = [
-  {name:"Shakeel", color:"#4d9fff"}, {name:"Sam", color:"#00e5a0"},
-  {name:"Bernard", color:"#f0b429"}, {name:"Ghulam", color:"#ff6b35"},
-  {name:"Ahmad", color:"#a855f7"}
+  {name:"Shakeel",color:"#4d9fff"},{name:"Sam",color:"#00e5a0"},
+  {name:"Bernard",color:"#f0b429"},{name:"Ghulam",color:"#ff6b35"},
+  {name:"Ahmad",color:"#a855f7"}
 ];
+
+const STATUS_OPTIONS = ["New","In Progress","Waiting","Closed"];
 
 let allData = [];
 let currentEngineer = 'all';
-let selectedStatuses = ['Closed', 'New', 'In Progress', 'Waiting'];
+let selectedStatuses = ['New','In Progress','Waiting','Closed'];
 
 window.onload = () => loadData();
 
@@ -186,34 +183,9 @@ async function loadData() {
     document.getElementById('content').style.display = 'block';
     refreshUI();
   } catch(e) {
-    console.error("Sync Error:", e);
     alert("Sync Error: " + e.message);
   }
   btn.style.opacity = '1';
-}
-
-async function assignEngineer(rowIndex, selectEl) {
-  const engineerName = selectEl.value;
-  if (!engineerName) return;
-
-  const wrap = selectEl.closest('.assign-wrap');
-  wrap.classList.add('assigning');
-
-  const ticket = allData[rowIndex];
-  const timestamp = getVal(ticket, 'Timestamp');
-
-  try {
-    await fetchJSONP(SCRIPT_URL_MAIN + '&action=assign&timestamp=' + encodeURIComponent(timestamp) + '&name=' + encodeURIComponent(engineerName));
-    // Update locally immediately
-    allData[rowIndex]['Name'] = engineerName;
-    showToast('✅ Assigned to ' + engineerName + '!');
-    refreshUI();
-  } catch(e) {
-    // Even if script doesn't handle it yet, update locally
-    allData[rowIndex]['Name'] = engineerName;
-    showToast('✅ Assigned to ' + engineerName + '!');
-    refreshUI();
-  }
 }
 
 function refreshUI() { renderOverview(); updateStats(); renderTable(); }
@@ -239,13 +211,13 @@ function renderOverview() {
   const grid = document.getElementById('overview-grid');
   grid.innerHTML = `<div class="eng-card ${currentEngineer==='all'?'active':''}" onclick="selectEng('all')">
     <div class="eng-card-name" style="color:var(--accent)">Full Team</div>
-    <div style="font-size:11px; color:var(--muted)">${allData.length} Total Tickets</div>
+    <div style="font-size:11px;color:var(--muted)">${allData.length} Total Tickets</div>
   </div>` + ENGINEERS.map(eng => {
-    const count = allData.filter(r => getVal(r, 'Name').trim() === eng.name).length;
+    const count = allData.filter(r => getVal(r,'Name').trim() === eng.name).length;
     return `<div class="eng-card ${currentEngineer===eng.name?'active':''}" onclick="selectEng('${eng.name}')">
       <div class="eng-card-name" style="color:${eng.color}">${eng.name}</div>
-      <div style="font-size:11px; color:var(--muted)">${count} Records</div>
-      <div style="position:absolute; bottom:0; left:0; right:0; height:3px; background:${eng.color}"></div>
+      <div style="font-size:11px;color:var(--muted)">${count} Records</div>
+      <div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:${eng.color}"></div>
     </div>`;
   }).join('');
 }
@@ -257,14 +229,14 @@ function selectEng(name) {
 }
 
 function updateStats() {
-  const tickets = currentEngineer === 'all' ? allData : allData.filter(r => getVal(r, 'Name').trim() === currentEngineer);
+  const tickets = currentEngineer === 'all' ? allData : allData.filter(r => getVal(r,'Name').trim() === currentEngineer);
   const c = {closed:0, open:0, inprogress:0, waiting:0};
   tickets.forEach(r => {
-    const s = getVal(r, 'Current Status', 'Status').toLowerCase();
+    const s = getVal(r,'Current Status','Status').toLowerCase();
     if(s.includes('closed')) c.closed++;
-    else if(s.includes('new') || s === '') c.open++;
     else if(s.includes('in progress')) c.inprogress++;
     else if(s.includes('waiting')) c.waiting++;
+    else c.open++;
   });
   document.getElementById('count-closed').innerText = c.closed;
   document.getElementById('count-open').innerText = c.open;
@@ -284,25 +256,61 @@ function toggleSlice(status) {
   renderTable();
 }
 
+// Assign engineer + set status to In Progress
+function assignEngineer(realIndex, selectEl) {
+  const engineerName = selectEl.value;
+  if (!engineerName) return;
+  allData[realIndex]['Name'] = engineerName;
+  allData[realIndex]['Current Status'] = 'In Progress';
+  allData[realIndex]['Status'] = 'In Progress';
+  showToast('✅ Assigned to ' + engineerName + ' → In Progress');
+  refreshUI();
+}
+
+// Update status from dropdown
+function updateStatus(realIndex, newStatus) {
+  allData[realIndex]['Current Status'] = newStatus;
+  allData[realIndex]['Status'] = newStatus;
+  if (newStatus !== 'Waiting') {
+    allData[realIndex]['_spareParts'] = '';
+  }
+  showToast('✅ Status updated to: ' + newStatus);
+  refreshUI();
+}
+
+// Save spare parts text
+function saveSpareParts(realIndex, inputEl) {
+  const parts = inputEl.value.trim();
+  if (!parts) return;
+  allData[realIndex]['_spareParts'] = parts;
+  showToast('🔧 Spare parts saved: ' + parts);
+  refreshUI();
+}
+
 function renderTable() {
-  let tickets = currentEngineer === 'all' ? allData : allData.filter(r => getVal(r, 'Name').trim() === currentEngineer);
+  let tickets = currentEngineer === 'all' ? allData : allData.filter(r => getVal(r,'Name').trim() === currentEngineer);
+
   if (selectedStatuses.length > 0) {
     tickets = tickets.filter(r => {
-      const s = getVal(r, 'Current Status', 'Status').toLowerCase();
+      const s = getVal(r,'Current Status','Status').toLowerCase();
       return selectedStatuses.some(status => {
         if (status === 'Waiting') return s.includes('waiting');
         if (status === 'New') return (s.includes('new') || s === '');
-        return s === status.toLowerCase();
+        if (status === 'In Progress') return s.includes('in progress');
+        if (status === 'Closed') return s.includes('closed');
+        return false;
       });
     });
   } else { tickets = []; }
 
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = tickets.map((r, i) => {
-    const nameVal = getVal(r, 'Name');
-    const statusVal = getVal(r, 'Current Status', 'Status') || 'New';
+    const nameVal = getVal(r,'Name');
+    const statusVal = getVal(r,'Current Status','Status') || 'New';
     const isUnassigned = (nameVal === '');
     const realIndex = allData.indexOf(r);
+    const spareParts = r['_spareParts'] || getVal(r,'What spare part is needed?') || '';
+    const isWaiting = statusVal.toLowerCase().includes('waiting');
 
     let bc = 'badge-new';
     if(statusVal.toLowerCase().includes('closed')) bc = 'badge-closed';
@@ -310,25 +318,45 @@ function renderTable() {
     else if(statusVal.toLowerCase().includes('waiting')) bc = 'badge-waiting';
     if(isUnassigned) bc = 'badge-unassigned';
 
+    const engColor = ENGINEERS.find(e => e.name === nameVal)?.color || 'var(--text)';
+
+    // Assignee cell
     const assigneeCell = isUnassigned
       ? `<div class="assign-wrap">
           <select class="assign-select" id="sel-${realIndex}">
             <option value="">⚠ Assign to...</option>
             ${ENGINEERS.map(e => `<option value="${e.name}">${e.name}</option>`).join('')}
           </select>
-          <button class="assign-btn" onclick="assignEngineer(${realIndex}, document.getElementById('sel-${realIndex}'))">
-            Assign ✓
-          </button>
+          <button class="assign-btn" onclick="assignEngineer(${realIndex}, document.getElementById('sel-${realIndex}'))">Assign ✓</button>
         </div>`
-      : `<span style="font-weight:700; color:${ENGINEERS.find(e=>e.name===nameVal)?.color||'var(--text)'}">${nameVal}</span>`;
+      : `<span style="font-weight:700;color:${engColor}">${nameVal}</span>`;
+
+    // Status cell — dropdown for assigned tickets
+    const statusCell = isUnassigned
+      ? `<span class="status-badge ${bc}">Awaiting Engineer</span>`
+      : `<div>
+          <select class="status-select" onchange="updateStatus(${realIndex}, this.value)">
+            ${STATUS_OPTIONS.map(s => `<option value="${s}" ${statusVal===s?'selected':''}>${s === 'Waiting' ? 'Waiting for Spare Parts' : s}</option>`).join('')}
+          </select>
+        </div>`;
+
+    // Spare parts cell
+    const spareCell = isWaiting
+      ? `<div>
+          <div class="spare-parts-cell">${spareParts || '-'}</div>
+          <input class="spare-input" id="spare-${realIndex}" placeholder="Enter spare parts..." value="${spareParts}"/>
+          <br><button class="save-btn" onclick="saveSpareParts(${realIndex}, document.getElementById('spare-${realIndex}'))">💾 Save</button>
+        </div>`
+      : `<span class="spare-parts-cell">${spareParts || '-'}</span>`;
 
     return `<tr>
       <td>${i+1}</td>
       <td>${assigneeCell}</td>
-      <td>${getVal(r, 'Clinic/Hospital Name', 'Customer/Account Name') || '-'}</td>
-      <td><span class="status-badge ${bc}">${isUnassigned ? 'Awaiting Engineer' : statusVal}</span></td>
-      <td><span style="color:var(--accent3)">${calculateDuration(getVal(r, 'Timestamp', 'Request Date'), getVal(r, 'Closing Date'))}</span></td>
-      <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted)">${getVal(r, 'Description of the Technical Issue', 'Problem Description') || '-'}</td>
+      <td>${getVal(r,'Clinic/Hospital Name','Customer/Account Name') || '-'}</td>
+      <td>${statusCell}</td>
+      <td>${spareCell}</td>
+      <td><span style="color:var(--accent3)">${calculateDuration(getVal(r,'Timestamp','Request Date'), getVal(r,'Closing Date'))}</span></td>
+      <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">${getVal(r,'Description of the Technical Issue','Problem Description') || '-'}</td>
     </tr>`;
   }).join('');
 }
