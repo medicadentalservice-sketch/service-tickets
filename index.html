@@ -67,9 +67,9 @@
   .save-btn { background:var(--waiting); color:#000; border:none; border-radius:6px; padding:3px 8px; font-family:'Syne',sans-serif; font-size:10px; font-weight:800; cursor:pointer; width:fit-content; }
   .spare-text { color:var(--waiting); font-size:11px; }
   .client-info { display:flex; flex-direction:column; gap:2px; }
-  .client-info .name { font-weight:700; font-size:12px; }
-  .client-info .phone { color:var(--accent3); font-size:11px; }
-  .client-info .location { color:var(--muted); font-size:10px; }
+  .client-info .cname { font-weight:700; font-size:12px; }
+  .client-info .phone { color:var(--accent3); font-size:11px; text-decoration:none; }
+  .client-info .clocation { color:var(--muted); font-size:10px; }
   .device-info { display:flex; flex-direction:column; gap:2px; }
   .device-info .model { font-size:11px; }
   .device-info .serial { color:var(--muted); font-size:10px; }
@@ -148,7 +148,6 @@ const ENGINEERS = [
 const STATUS_OPTIONS = ["New","In Progress","Waiting","Closed"];
 
 let allData = [];
-let clientData = [];
 let currentEngineer = 'all';
 let selectedStatuses = ['New','In Progress','Waiting','Closed'];
 
@@ -222,11 +221,11 @@ function getStatus(r) {
 }
 
 function isClientTicket(r) {
-  // Client tickets have these specific columns from the form
   return getVal(r,'Contact Person Name / اسم الشخص') !== '' ||
          getVal(r,'Mobile Number / رقم الجوال') !== '' ||
          getVal(r,'Clinic/Hospital Name / اسم العيادة/المستشفى') !== '' ||
-         getVal(r,'_source') === 'client';
+         getVal(r,'Mobile Number') !== '' ||
+         getVal(r,'Contact Person Name') !== '';
 }
 
 function calculateDuration(start, end) {
@@ -265,9 +264,9 @@ function updateStats() {
   const c = {closed:0, open:0, inprogress:0, waiting:0};
   tickets.forEach(r => {
     const s = getStatus(r).toLowerCase();
-    if(s==='closed') c.closed++;
-    else if(s==='in progress') c.inprogress++;
-    else if(s==='waiting') c.waiting++;
+    if(s.includes('closed')) c.closed++;
+    else if(s.includes('in progress')) c.inprogress++;
+    else if(s.includes('waiting')) c.waiting++;
     else c.open++;
   });
   document.getElementById('count-closed').innerText = c.closed;
@@ -288,7 +287,6 @@ function toggleSlice(status) {
   renderTable();
 }
 
-// ✅ Handle assign / reassign / unassign
 async function handleAssign(realIndex, selectEl, btnEl) {
   const selected = selectEl.value;
   if (!selected) { showToast('⚠ Select an option first!', '#ff6b35'); return; }
@@ -298,17 +296,15 @@ async function handleAssign(realIndex, selectEl, btnEl) {
   const timestamp = getVal(ticket,'Timestamp');
 
   if (selected === 'UNASSIGN') {
-    // Delete row from Engineers sheet — ticket goes back to client sheet as unassigned
     try {
       await fetchJSONP(SCRIPT + '?action=deleteRow&timestamp=' + encodeURIComponent(timestamp));
       allData.splice(realIndex, 1);
-      showToast('↩ Ticket unassigned — back to New', '#ff6b35');
+      showToast('↩ Ticket unassigned → back to New', '#ff6b35');
     } catch(e) {
       allData.splice(realIndex, 1);
       showToast('↩ Unassigned locally only', '#f0b429');
     }
   } else {
-    // Assign or reassign to engineer
     try {
       await fetchJSONP(SCRIPT + '?action=assign&timestamp=' + encodeURIComponent(timestamp) + '&name=' + encodeURIComponent(selected));
       allData[realIndex]['Name'] = selected;
@@ -323,7 +319,6 @@ async function handleAssign(realIndex, selectEl, btnEl) {
   refreshUI();
 }
 
-// ✅ Assign unassigned client ticket — adds new row to Engineers sheet
 async function assignNewTicket(realIndex, selectEl, btnEl) {
   const selected = selectEl.value;
   if (!selected) { showToast('⚠ Select an engineer first!', '#ff6b35'); return; }
@@ -338,17 +333,12 @@ async function assignNewTicket(realIndex, selectEl, btnEl) {
   const device = encodeURIComponent(getVal(ticket,'Device Model / طراز الجهاز','Device Model'));
   const serial = encodeURIComponent(getVal(ticket,'Serial Number / الرقم التسلسلي','Equipment Serial Number'));
   const location = encodeURIComponent(getVal(ticket,'Location / الموقع','Location'));
-
   try {
     await fetchJSONP(SCRIPT + '?action=addRow&timestamp=' + encodeURIComponent(timestamp) +
       '&name=' + encodeURIComponent(selected) +
-      '&clinic=' + clinic +
-      '&description=' + description +
-      '&contact=' + contact +
-      '&phone=' + phone +
-      '&device=' + device +
-      '&serial=' + serial +
-      '&location=' + location);
+      '&clinic=' + clinic + '&description=' + description +
+      '&contact=' + contact + '&phone=' + phone +
+      '&device=' + device + '&serial=' + serial + '&location=' + location);
     allData[realIndex]['Name'] = selected;
     allData[realIndex]['Current Status'] = 'In Progress';
     showToast('✅ Assigned to ' + selected + ' → In Progress');
@@ -401,10 +391,10 @@ function renderTable() {
     tickets = tickets.filter(r => {
       const s = getStatus(r).toLowerCase();
       return selectedStatuses.some(status => {
-        if (status==='Waiting') return s==='waiting';
-        if (status==='New') return s==='new'||s==='';
-        if (status==='In Progress') return s==='in progress';
-        if (status==='Closed') return s==='closed';
+        if(status==='Waiting') return s.includes('waiting');
+        if(status==='New') return s==='new' || s==='';
+        if(status==='In Progress') return s.includes('in progress');
+        if(status==='Closed') return s.includes('closed');
         return false;
       });
     });
@@ -417,26 +407,24 @@ function renderTable() {
     const isUnassigned = nameVal === '';
     const realIndex = allData.indexOf(r);
     const spareParts = r['_spareParts'] || getVal(r,'What spare part is needed?');
-    const isWaiting = statusVal.toLowerCase() === 'waiting';
+    const isWaiting = statusVal.toLowerCase().includes('waiting');
     const engColor = ENGINEERS.find(e=>e.name===nameVal)?.color || 'var(--text)';
     const fromClient = isClientTicket(r);
 
-    // Client info fields
     const clinicName = getVal(r,'Customer/Account Name','Clinic/Hospital Name / اسم العيادة/المستشفى','Clinic/Hospital Name');
     const contactName = getVal(r,'Contact Person Name / اسم الشخص','Contact Person Name');
     const phoneNum = getVal(r,'Mobile Number / رقم الجوال','Mobile Number');
-    const deviceModel = getVal(r,'Device Model / طراز الجهاز','Device Model','Equipment Serial Number');
+    const deviceModel = getVal(r,'Device Model / طراز الجهاز','Device Model');
     const serialNum = getVal(r,'Serial Number / الرقم التسلسلي','Equipment Serial Number');
     const location = getVal(r,'Location / الموقع','Location');
     const description = getVal(r,'Problem Description','Description of the Technical Issue / وصف المشكلة التقنية','Description of the Technical Issue');
 
     let bc = 'badge-new';
-    if(statusVal.toLowerCase()==='closed') bc='badge-closed';
-    else if(statusVal.toLowerCase()==='in progress') bc='badge-inprogress';
-    else if(statusVal.toLowerCase()==='waiting') bc='badge-waiting';
+    if(statusVal.toLowerCase().includes('closed')) bc='badge-closed';
+    else if(statusVal.toLowerCase().includes('in progress')) bc='badge-inprogress';
+    else if(statusVal.toLowerCase().includes('waiting')) bc='badge-waiting';
     if(isUnassigned) bc='badge-unassigned';
 
-    // Assignee cell
     let assigneeCell;
     if (isUnassigned) {
       assigneeCell = `<div class="assign-wrap">
@@ -481,17 +469,15 @@ function renderTable() {
         </div>`
       : `<span class="spare-text">${spareParts?'🔧 '+spareParts:'-'}</span>`;
 
-    // Contact & phone cell
     const contactCell = `<div class="client-info">
-      ${contactName?`<span class="name">👤 ${contactName}</span>`:''}
+      ${contactName?`<span class="cname">👤 ${contactName}</span>`:'<span style="color:var(--muted)">-</span>'}
       ${phoneNum?`<a class="phone" href="tel:${phoneNum}">📞 ${phoneNum}</a>`:''}
-      ${location?`<span class="location">📍 ${location}</span>`:''}
+      ${location?`<span class="clocation">📍 ${location}</span>`:''}
     </div>`;
 
-    // Device cell
     const deviceCell = `<div class="device-info">
-      ${deviceModel?`<span class="model">${deviceModel}</span>`:''}
-      ${serialNum?`<span class="serial">#${serialNum}</span>`:'<span style="color:var(--muted)">-</span>'}
+      ${deviceModel?`<span class="model">${deviceModel}</span>`:'<span style="color:var(--muted)">-</span>'}
+      ${serialNum?`<span class="serial">#${serialNum}</span>`:''}
     </div>`;
 
     return `<tr>
