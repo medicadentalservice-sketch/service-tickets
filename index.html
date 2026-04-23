@@ -15,7 +15,7 @@
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:'DM Mono',monospace; background:var(--bg); color:var(--text); min-height:100vh; }
   body::before { content:''; position:fixed; inset:0; background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
-  .container { position:relative; z-index:1; max-width:1400px; margin:0 auto; padding:40px 24px; }
+  .container { position:relative; z-index:1; max-width:1600px; margin:0 auto; padding:40px 24px; }
   header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:32px; flex-wrap:wrap; gap:20px; border-bottom:1px solid var(--border); padding-bottom:20px; }
   .logo-area h1 { font-family:'Syne',sans-serif; font-size:24px; font-weight:800; }
   .logo-area h1 span { color:var(--accent); }
@@ -41,8 +41,8 @@
   .stat-value { font-family:'Syne',sans-serif; font-size:42px; font-weight:800; line-height:1; margin-top:10px; }
   .table-section { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
   .table-scroll { overflow-x:auto; }
-  table { width:100%; border-collapse:collapse; font-size:12px; min-width:1000px; }
-  th { padding:12px 16px; text-align:left; background:var(--surface2); color:var(--muted); text-transform:uppercase; font-size:10px; }
+  table { width:100%; border-collapse:collapse; font-size:12px; min-width:1400px; }
+  th { padding:12px 16px; text-align:left; background:var(--surface2); color:var(--muted); text-transform:uppercase; font-size:10px; white-space:nowrap; }
   td { padding:10px 16px; border-bottom:1px solid var(--border); vertical-align:middle; }
   .status-badge { display:inline-flex; align-items:center; gap:5px; padding:4px 12px; border-radius:100px; font-size:10px; font-weight:700; }
   .badge-closed { background:#00e5a015; color:var(--closed); border:1px solid #00e5a030; }
@@ -52,20 +52,27 @@
   .badge-unassigned { background:#ff00ff15; color:var(--unassigned); border:1px solid #ff00ff40; animation:pulse 2s infinite; }
   @keyframes pulse { 0%{opacity:1}50%{opacity:0.6}100%{opacity:1} }
   .refresh-btn { background:var(--accent); border:none; color:#000; padding:10px 20px; border-radius:8px; cursor:pointer; font-family:'Syne',sans-serif; font-size:12px; font-weight:700; }
-  .assign-wrap { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-  .assign-select { background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; outline:none; }
+  .assign-wrap { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .assign-select { background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:4px 6px; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; outline:none; max-width:120px; }
   .assign-select.unassigned { background:#1a0a1a; color:var(--unassigned); border:1px solid #ff00ff40; animation:pulse 2s infinite; }
   .action-btn { border:none; border-radius:6px; padding:4px 10px; font-family:'Syne',sans-serif; font-size:11px; font-weight:800; cursor:pointer; transition:all .2s; white-space:nowrap; }
   .action-btn.assign { background:var(--unassigned); color:#000; }
   .action-btn.reassign { background:var(--accent3); color:#000; }
   .action-btn:disabled { opacity:0.4; cursor:not-allowed; }
-  .status-select { background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; outline:none; width:100%; }
+  .status-select { background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:4px 6px; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; outline:none; width:100%; }
   .status-select:hover { border-color:var(--accent); }
   .spare-wrap { display:flex; flex-direction:column; gap:4px; }
-  .spare-input { background:var(--surface2); color:var(--text); border:1px solid var(--waiting); border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace; font-size:11px; outline:none; width:150px; }
+  .spare-input { background:var(--surface2); color:var(--text); border:1px solid var(--waiting); border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace; font-size:11px; outline:none; width:130px; }
   .spare-input::placeholder { color:var(--muted); }
   .save-btn { background:var(--waiting); color:#000; border:none; border-radius:6px; padding:3px 8px; font-family:'Syne',sans-serif; font-size:10px; font-weight:800; cursor:pointer; width:fit-content; }
   .spare-text { color:var(--waiting); font-size:11px; }
+  .client-info { display:flex; flex-direction:column; gap:2px; }
+  .client-info .name { font-weight:700; font-size:12px; }
+  .client-info .phone { color:var(--accent3); font-size:11px; }
+  .client-info .location { color:var(--muted); font-size:10px; }
+  .device-info { display:flex; flex-direction:column; gap:2px; }
+  .device-info .model { font-size:11px; }
+  .device-info .serial { color:var(--muted); font-size:10px; }
   #toast { position:fixed; bottom:30px; right:30px; color:#000; padding:12px 20px; border-radius:10px; font-family:'Syne',sans-serif; font-weight:800; font-size:13px; transform:translateY(100px); opacity:0; transition:all .3s; z-index:999; }
   #toast.show { transform:translateY(0); opacity:1; }
 </style>
@@ -110,7 +117,9 @@
             <tr>
               <th>#</th>
               <th>Assignee</th>
-              <th>Account/Clinic</th>
+              <th>Clinic / Account</th>
+              <th>Contact & Phone</th>
+              <th>Device</th>
               <th>Status</th>
               <th>Spare Parts</th>
               <th>Duration</th>
@@ -126,7 +135,7 @@
 <div id="toast"></div>
 
 <script>
-const SCRIPT = "https://script.google.com/macros/s/AKfycbxpNWPofPEaUC8sX01slerzchcBTE98do2Mfu_X7gDJ5oKFcJRwS63KpsdSVR_bBKVN/exec";
+const SCRIPT = "https://script.google.com/macros/s/AKfycbyd87MSxzZUXwhU6S4R2p-JHNtHew0aMvVYmN59FyRHbEV7wQYr0RvI4Fpyj887Y9N8/exec";
 
 const ENGINEERS = [
   {name:"Shakeel",color:"#4d9fff"},
@@ -139,6 +148,7 @@ const ENGINEERS = [
 const STATUS_OPTIONS = ["New","In Progress","Waiting","Closed"];
 
 let allData = [];
+let clientData = [];
 let currentEngineer = 'all';
 let selectedStatuses = ['New','In Progress','Waiting','Closed'];
 
@@ -211,12 +221,12 @@ function getStatus(r) {
   return getVal(r,'Current Status','Status') || 'New';
 }
 
-function isFromClientForm(r) {
-  // Client form tickets have no 'Name' column originally
-  // We mark them with _fromClient flag when imported
-  return r['_fromClient'] === true || 
-    // OR they have clinic/hospital name from client form columns
-    (getVal(r,'Clinic/Hospital Name') !== '' && getVal(r,'Customer/Account Name') === '');
+function isClientTicket(r) {
+  // Client tickets have these specific columns from the form
+  return getVal(r,'Contact Person Name / اسم الشخص') !== '' ||
+         getVal(r,'Mobile Number / رقم الجوال') !== '' ||
+         getVal(r,'Clinic/Hospital Name / اسم العيادة/المستشفى') !== '' ||
+         getVal(r,'_source') === 'client';
 }
 
 function calculateDuration(start, end) {
@@ -278,31 +288,27 @@ function toggleSlice(status) {
   renderTable();
 }
 
-// ✅ Assign or Unassign based on dropdown selection
+// ✅ Handle assign / reassign / unassign
 async function handleAssign(realIndex, selectEl, btnEl) {
   const selected = selectEl.value;
   if (!selected) { showToast('⚠ Select an option first!', '#ff6b35'); return; }
-
   btnEl.disabled = true;
   btnEl.innerText = '...';
-
   const ticket = allData[realIndex];
   const timestamp = getVal(ticket,'Timestamp');
 
   if (selected === 'UNASSIGN') {
-    // Unassign — clear name, set status to New
+    // Delete row from Engineers sheet — ticket goes back to client sheet as unassigned
     try {
-      await fetchJSONP(SCRIPT + '?action=assign&timestamp=' + encodeURIComponent(timestamp) + '&name=&newStatus=New');
-      allData[realIndex]['Name'] = '';
-      allData[realIndex]['Current Status'] = 'New';
-      showToast('↩ Ticket unassigned → New', '#ff6b35');
+      await fetchJSONP(SCRIPT + '?action=deleteRow&timestamp=' + encodeURIComponent(timestamp));
+      allData.splice(realIndex, 1);
+      showToast('↩ Ticket unassigned — back to New', '#ff6b35');
     } catch(e) {
-      allData[realIndex]['Name'] = '';
-      allData[realIndex]['Current Status'] = 'New';
+      allData.splice(realIndex, 1);
       showToast('↩ Unassigned locally only', '#f0b429');
     }
   } else {
-    // Assign or Reassign to engineer
+    // Assign or reassign to engineer
     try {
       await fetchJSONP(SCRIPT + '?action=assign&timestamp=' + encodeURIComponent(timestamp) + '&name=' + encodeURIComponent(selected));
       allData[realIndex]['Name'] = selected;
@@ -313,6 +319,43 @@ async function handleAssign(realIndex, selectEl, btnEl) {
       allData[realIndex]['Current Status'] = 'In Progress';
       showToast('⚠ Updated locally only', '#f0b429');
     }
+  }
+  refreshUI();
+}
+
+// ✅ Assign unassigned client ticket — adds new row to Engineers sheet
+async function assignNewTicket(realIndex, selectEl, btnEl) {
+  const selected = selectEl.value;
+  if (!selected) { showToast('⚠ Select an engineer first!', '#ff6b35'); return; }
+  btnEl.disabled = true;
+  btnEl.innerText = '...';
+  const ticket = allData[realIndex];
+  const timestamp = getVal(ticket,'Timestamp');
+  const clinic = encodeURIComponent(getVal(ticket,'Customer/Account Name','Clinic/Hospital Name / اسم العيادة/المستشفى','Clinic/Hospital Name'));
+  const description = encodeURIComponent(getVal(ticket,'Problem Description','Description of the Technical Issue / وصف المشكلة التقنية','Description of the Technical Issue'));
+  const contact = encodeURIComponent(getVal(ticket,'Contact Person Name / اسم الشخص','Contact Person Name'));
+  const phone = encodeURIComponent(getVal(ticket,'Mobile Number / رقم الجوال','Mobile Number'));
+  const device = encodeURIComponent(getVal(ticket,'Device Model / طراز الجهاز','Device Model'));
+  const serial = encodeURIComponent(getVal(ticket,'Serial Number / الرقم التسلسلي','Equipment Serial Number'));
+  const location = encodeURIComponent(getVal(ticket,'Location / الموقع','Location'));
+
+  try {
+    await fetchJSONP(SCRIPT + '?action=addRow&timestamp=' + encodeURIComponent(timestamp) +
+      '&name=' + encodeURIComponent(selected) +
+      '&clinic=' + clinic +
+      '&description=' + description +
+      '&contact=' + contact +
+      '&phone=' + phone +
+      '&device=' + device +
+      '&serial=' + serial +
+      '&location=' + location);
+    allData[realIndex]['Name'] = selected;
+    allData[realIndex]['Current Status'] = 'In Progress';
+    showToast('✅ Assigned to ' + selected + ' → In Progress');
+  } catch(e) {
+    allData[realIndex]['Name'] = selected;
+    allData[realIndex]['Current Status'] = 'In Progress';
+    showToast('⚠ Updated locally only', '#f0b429');
   }
   refreshUI();
 }
@@ -337,7 +380,7 @@ async function saveSpareParts(realIndex, inputEl, btnEl) {
   const parts = inputEl.value.trim();
   if (!parts) { showToast('⚠ Enter spare parts first!', '#ff6b35'); return; }
   btnEl.disabled = true;
-  btnEl.innerText = 'Saving...';
+  btnEl.innerText = '...';
   const ticket = allData[realIndex];
   const timestamp = getVal(ticket,'Timestamp');
   try {
@@ -376,7 +419,16 @@ function renderTable() {
     const spareParts = r['_spareParts'] || getVal(r,'What spare part is needed?');
     const isWaiting = statusVal.toLowerCase() === 'waiting';
     const engColor = ENGINEERS.find(e=>e.name===nameVal)?.color || 'var(--text)';
-    const fromClient = isFromClientForm(r);
+    const fromClient = isClientTicket(r);
+
+    // Client info fields
+    const clinicName = getVal(r,'Customer/Account Name','Clinic/Hospital Name / اسم العيادة/المستشفى','Clinic/Hospital Name');
+    const contactName = getVal(r,'Contact Person Name / اسم الشخص','Contact Person Name');
+    const phoneNum = getVal(r,'Mobile Number / رقم الجوال','Mobile Number');
+    const deviceModel = getVal(r,'Device Model / طراز الجهاز','Device Model','Equipment Serial Number');
+    const serialNum = getVal(r,'Serial Number / الرقم التسلسلي','Equipment Serial Number');
+    const location = getVal(r,'Location / الموقع','Location');
+    const description = getVal(r,'Problem Description','Description of the Technical Issue / وصف المشكلة التقنية','Description of the Technical Issue');
 
     let bc = 'badge-new';
     if(statusVal.toLowerCase()==='closed') bc='badge-closed';
@@ -384,25 +436,22 @@ function renderTable() {
     else if(statusVal.toLowerCase()==='waiting') bc='badge-waiting';
     if(isUnassigned) bc='badge-unassigned';
 
-    // ✅ Unassigned ticket — assign dropdown
-    // ✅ Client ticket assigned — show name + reassign/unassign dropdown + blue button
-    // ✅ Engineer ticket assigned — show name only, no reassign
+    // Assignee cell
     let assigneeCell;
     if (isUnassigned) {
       assigneeCell = `<div class="assign-wrap">
         <select class="assign-select unassigned" id="sel-${realIndex}">
-          <option value="">⚠ Assign to...</option>
+          <option value="">⚠ Assign...</option>
           ${ENGINEERS.map(e=>`<option value="${e.name}">${e.name}</option>`).join('')}
         </select>
         <button class="action-btn assign" id="abtn-${realIndex}"
-          onclick="handleAssign(${realIndex},document.getElementById('sel-${realIndex}'),document.getElementById('abtn-${realIndex}'))">
-          Assign ✓
+          onclick="assignNewTicket(${realIndex},document.getElementById('sel-${realIndex}'),document.getElementById('abtn-${realIndex}'))">
+          ✓
         </button>
       </div>`;
     } else if (fromClient) {
-      // Client ticket — can reassign or unassign
       assigneeCell = `<div class="assign-wrap">
-        <span style="font-weight:700;color:${engColor};min-width:55px">${nameVal}</span>
+        <span style="font-weight:700;color:${engColor};min-width:50px">${nameVal}</span>
         <select class="assign-select" id="sel-${realIndex}">
           <option value="">↺ Change...</option>
           ${ENGINEERS.filter(e=>e.name!==nameVal).map(e=>`<option value="${e.name}">${e.name}</option>`).join('')}
@@ -414,7 +463,6 @@ function renderTable() {
         </button>
       </div>`;
     } else {
-      // Engineer-created ticket — name only, no reassign
       assigneeCell = `<span style="font-weight:700;color:${engColor}">${nameVal}</span>`;
     }
 
@@ -433,15 +481,30 @@ function renderTable() {
         </div>`
       : `<span class="spare-text">${spareParts?'🔧 '+spareParts:'-'}</span>`;
 
+    // Contact & phone cell
+    const contactCell = `<div class="client-info">
+      ${contactName?`<span class="name">👤 ${contactName}</span>`:''}
+      ${phoneNum?`<a class="phone" href="tel:${phoneNum}">📞 ${phoneNum}</a>`:''}
+      ${location?`<span class="location">📍 ${location}</span>`:''}
+    </div>`;
+
+    // Device cell
+    const deviceCell = `<div class="device-info">
+      ${deviceModel?`<span class="model">${deviceModel}</span>`:''}
+      ${serialNum?`<span class="serial">#${serialNum}</span>`:'<span style="color:var(--muted)">-</span>'}
+    </div>`;
+
     return `<tr>
       <td>${i+1}</td>
       <td>${assigneeCell}</td>
-      <td>${getVal(r,'Customer/Account Name','Clinic/Hospital Name')||'-'}</td>
+      <td style="font-weight:600">${clinicName||'-'}</td>
+      <td>${contactCell}</td>
+      <td>${deviceCell}</td>
       <td>${statusCell}</td>
       <td>${spareCell}</td>
       <td><span style="color:var(--accent3)">${calculateDuration(getVal(r,'Timestamp'),getVal(r,'Closing Date'))}</span></td>
-      <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">
-        ${getVal(r,'Problem Description','Description of the Technical Issue')||'-'}
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">
+        ${description||'-'}
       </td>
     </tr>`;
   }).join('');
