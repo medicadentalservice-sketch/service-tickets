@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sam — Engineer Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10; --surface: #111318; --surface2: #181c23; --border: #ffffff0f;
+    --accent: #00e5a0; --text: #f0f2f7; --muted: #6b7280;
+    --closed: #00e5a0; --open: #4d9fff; --inprogress: #f0b429; --waiting: #ff6b35;
+    --unassigned: #ff00ff;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Mono',monospace; background:var(--bg); color:var(--text); min-height:100vh; }
+  body::before { content:''; position:fixed; inset:0; background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
+  .container { position:relative; z-index:1; max-width:1400px; margin:0 auto; padding:40px 24px; }
+  header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:32px; flex-wrap:wrap; gap:20px; border-bottom:1px solid var(--border); padding-bottom:20px; }
+  .logo-area h1 { font-family:'Syne',sans-serif; font-size:24px; font-weight:800; }
+  .logo-area h1 span { color:var(--accent); }
+  .engineer-badge { background:var(--accent); color:#000; padding:6px 16px; border-radius:100px; font-family:'Syne',sans-serif; font-weight:800; font-size:13px; }
+  #loading { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; gap:20px; }
+  .spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  #content { display:none; animation:fadeIn .4s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)} }
+  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+  @media(max-width:700px){ .stats-grid { grid-template-columns:repeat(2,1fr); } }
+  .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; position:relative; cursor:pointer; transition:all 0.2s; opacity:0.5; }
+  .stat-card.active-slice { border:1px solid white; opacity:1; transform:scale(1.02); }
+  .stat-card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:3px; }
+  .stat-card.open::after { background:var(--open); }
+  .stat-card.inprogress::after { background:var(--inprogress); }
+  .stat-card.waiting::after { background:var(--waiting); }
+  .stat-card.closed::after { background:var(--closed); }
+  .stat-value { font-family:'Syne',sans-serif; font-size:42px; font-weight:800; line-height:1; margin-top:10px; }
+  .table-section { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:28px; }
+  .table-header { padding:16px 20px; background:var(--surface2); border-bottom:1px solid var(--border); font-family:'Syne',sans-serif; font-weight:800; font-size:14px; }
+  .table-scroll { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:12px; min-width:900px; }
+  th { padding:12px 16px; text-align:left; background:var(--surface2); color:var(--muted); text-transform:uppercase; font-size:10px; white-space:nowrap; }
+  td { padding:10px 16px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  .status-select { background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:4px 6px; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; outline:none; width:100%; }
+  .spare-wrap { display:flex; flex-direction:column; gap:4px; }
+  .spare-input { background:var(--surface2); color:var(--text); border:1px solid var(--waiting); border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace; font-size:11px; outline:none; width:130px; }
+  .spare-input::placeholder { color:var(--muted); }
+  .save-btn { background:var(--waiting); color:#000; border:none; border-radius:6px; padding:3px 8px; font-family:'Syne',sans-serif; font-size:10px; font-weight:800; cursor:pointer; }
+  .spare-text { color:var(--waiting); font-size:11px; }
+  .claim-btn { background:var(--unassigned); color:#000; border:none; border-radius:6px; padding:6px 14px; font-family:'Syne',sans-serif; font-size:11px; font-weight:800; cursor:pointer; transition:all .2s; animation:pulse 2s infinite; }
+  .claim-btn:hover { opacity:0.8; transform:scale(1.05); }
+  .claim-btn:disabled { opacity:0.4; cursor:not-allowed; animation:none; }
+  @keyframes pulse { 0%{opacity:1}50%{opacity:0.7}100%{opacity:1} }
+  .refresh-btn { background:var(--accent); border:none; color:#000; padding:10px 20px; border-radius:8px; cursor:pointer; font-family:'Syne',sans-serif; font-size:12px; font-weight:700; }
+  .client-info { display:flex; flex-direction:column; gap:2px; }
+  .client-info .cname { font-weight:700; font-size:12px; }
+  .client-info .phone { color:#4d9fff; font-size:11px; text-decoration:none; }
+  .client-info .clocation { color:var(--muted); font-size:10px; }
+  .new-ticket-row { background:#ff00ff08; }
+  #toast { position:fixed; bottom:30px; right:30px; color:#000; padding:12px 20px; border-radius:10px; font-family:'Syne',sans-serif; font-weight:800; font-size:13px; transform:translateY(100px); opacity:0; transition:all .3s; z-index:999; }
+  #toast.show { transform:translateY(0); opacity:1; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo-area">
+      <h1>Sam — <span>My Dashboard</span></h1>
+      <p style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-top:5px;">Engineer View</p>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+      <span class="engineer-badge">🔧 Hardware Engineer</span>
+      <button class="refresh-btn" onclick="loadData()" id="rbtn">↻ Refresh</button>
+    </div>
+  </header>
+
+  <div id="loading"><div class="spinner"></div><p>Loading your tickets...</p></div>
+
+  <div id="content">
+    <div class="stats-grid">
+      <div class="stat-card open active-slice" id="btn-New" onclick="toggleSlice('New')">
+        <small style="color:var(--muted)">NEW</small>
+        <div class="stat-value" id="count-open">0</div>
+      </div>
+      <div class="stat-card inprogress active-slice" id="btn-In Progress" onclick="toggleSlice('In Progress')">
+        <small style="color:var(--muted)">IN PROGRESS</small>
+        <div class="stat-value" id="count-inprogress">0</div>
+      </div>
+      <div class="stat-card waiting active-slice" id="btn-Waiting" onclick="toggleSlice('Waiting')">
+        <small style="color:var(--muted)">WAITING PARTS</small>
+        <div class="stat-value" id="count-waiting">0</div>
+      </div>
+      <div class="stat-card closed active-slice" id="btn-Closed" onclick="toggleSlice('Closed')">
+        <small style="color:var(--muted)">CLOSED</small>
+        <div class="stat-value" id="count-closed">0</div>
+      </div>
+    </div>
+
+    <!-- Unassigned hardware tickets available to claim -->
+    <div class="table-section">
+      <div class="table-header" style="color:var(--unassigned)">⚡ Available New Tickets — Tap to Claim</div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Clinic / Account</th><th>Contact & Phone</th><th>Description</th><th>Action</th></tr>
+          </thead>
+          <tbody id="tbody-new"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- My assigned tickets -->
+    <div class="table-section">
+      <div class="table-header" style="color:var(--accent)">📋 My Assigned Tickets</div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Clinic / Account</th><th>Contact & Phone</th><th>Status</th><th>Spare Parts</th><th>Duration</th><th>Description</th></tr>
+          </thead>
+          <tbody id="tbody-mine"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const SCRIPT = "https://script.google.com/macros/s/AKfycbyd87MSxzZUXwhU6S4R2p-JHNtHew0aMvVYmN59FyRHbEV7wQYr0RvI4Fpyj887Y9N8/exec";
+const MY_NAME = "Sam";
+const STATUS_OPTIONS = ["New","In Progress","Waiting","Closed"];
+let allData = [];
+let myTickets = [];
+let newTickets = [];
+let selectedStatuses = ['New','In Progress','Waiting','Closed'];
+
+window.onload = () => loadData();
+
+function showToast(msg, color) {
+  const t=document.getElementById('toast');
+  t.innerText=msg; t.style.background=color||'#00e5a0';
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+function fetchJSONP(url) {
+  return new Promise((resolve,reject)=>{
+    const cbName='cb_'+Math.random().toString(36).substr(2,9);
+    const script=document.createElement('script');
+    const timeout=setTimeout(()=>{try{document.body.removeChild(script);}catch(e){}delete window[cbName];reject(new Error('Timeout'));},15000);
+    window[cbName]=(data)=>{clearTimeout(timeout);try{document.body.removeChild(script);}catch(e){}delete window[cbName];resolve(data);};
+    script.onerror=()=>{clearTimeout(timeout);try{document.body.removeChild(script);}catch(e){}delete window[cbName];reject(new Error('Script error'));};
+    script.src=url+(url.includes('?')?'&':'?')+'callback='+cbName+'&t='+Date.now();
+    document.body.appendChild(script);
+  });
+}
+
+async function loadData() {
+  const btn=document.getElementById('rbtn');
+  btn.style.opacity='0.5'; btn.innerText='↻ Loading...';
+  try {
+    const data=await fetchJSONP(SCRIPT);
+    allData=data.filter(r=>r['Timestamp']&&r['Timestamp'].toString().trim()!=='')
+                .sort((a,b)=>new Date(b['Timestamp'])-new Date(a['Timestamp']));
+    // My tickets
+    myTickets=allData.filter(r=>getVal(r,'Name')===MY_NAME);
+    // Unassigned hardware tickets (not IT, not assigned to anyone)
+    newTickets=allData.filter(r=>{
+      const name=getVal(r,'Name');
+      const status=getStatus(r).toLowerCase();
+      const type=getVal(r,'Ticket Type').toLowerCase();
+      const isIT=type.includes('it')||type.includes('computer')||type.includes('system');
+      return name===''&&status==='new'&&!isIT;
+    });
+    document.getElementById('loading').style.display='none';
+    document.getElementById('content').style.display='block';
+    refreshUI();
+  } catch(e) { alert("Error: "+e.message); }
+  btn.style.opacity='1'; btn.innerText='↻ Refresh';
+}
+
+function refreshUI() { updateStats(); renderNewTickets(); renderMyTickets(); }
+
+function getVal(obj,...keys) {
+  for(let key of keys){if(obj[key]!==undefined&&obj[key]!==null&&obj[key].toString().trim()!=='')return obj[key].toString().trim();}
+  return "";
+}
+function getStatus(r){return getVal(r,'Current Status','Status')||'New';}
+function calculateDuration(start,end){
+  const s=new Date(start),e=end?new Date(end):new Date();
+  if(isNaN(s.getTime()))return '-';
+  const diffHrs=Math.floor((e-s)/(1000*60*60)),diffDays=Math.floor(diffHrs/24);
+  return diffDays>0?`${diffDays}d ${diffHrs%24}h`:`${diffHrs}h`;
+}
+
+function updateStats(){
+  const c={closed:0,open:0,inprogress:0,waiting:0};
+  myTickets.forEach(r=>{
+    const s=getStatus(r).toLowerCase();
+    if(s.includes('closed'))c.closed++;
+    else if(s.includes('in progress'))c.inprogress++;
+    else if(s.includes('waiting'))c.waiting++;
+    else c.open++;
+  });
+  document.getElementById('count-closed').innerText=c.closed;
+  document.getElementById('count-open').innerText=c.open;
+  document.getElementById('count-inprogress').innerText=c.inprogress;
+  document.getElementById('count-waiting').innerText=c.waiting;
+}
+
+function toggleSlice(status){
+  const index=selectedStatuses.indexOf(status);
+  if(index>-1){selectedStatuses.splice(index,1);document.getElementById('btn-'+status).classList.remove('active-slice');}
+  else{selectedStatuses.push(status);document.getElementById('btn-'+status).classList.add('active-slice');}
+  renderMyTickets();
+}
+
+async function claimTicket(timestamp, btnEl) {
+  btnEl.disabled=true; btnEl.innerText='Claiming...';
+  try {
+    const result=await fetchJSONP(SCRIPT+'?action=claim&timestamp='+encodeURIComponent(timestamp)+'&name='+encodeURIComponent(MY_NAME));
+    if(result.claimed){
+      showToast('✅ Ticket claimed! → In Progress');
+      await loadData();
+    } else {
+      showToast('⚠ Already claimed by '+result.assignedTo,'#ff6b35');
+      await loadData();
+    }
+  } catch(e) { showToast('⚠ Error claiming ticket','#ff6b35'); btnEl.disabled=false; btnEl.innerText='⚡ Claim'; }
+}
+
+async function updateStatus(idx, newStatus, selectEl) {
+  selectEl.disabled=true;
+  const ticket=myTickets[idx];
+  const timestamp=getVal(ticket,'Timestamp');
+  try {
+    await fetchJSONP(SCRIPT+'?action=updateStatus&timestamp='+encodeURIComponent(timestamp)+'&status='+encodeURIComponent(newStatus));
+    myTickets[idx]['Current Status']=newStatus;
+    if(newStatus!=='Waiting') myTickets[idx]['_spareParts']='';
+    showToast('✅ Status: '+(newStatus==='Waiting'?'Waiting for Spare Parts':newStatus));
+  } catch(e) { myTickets[idx]['Current Status']=newStatus; showToast('⚠ Local only','#f0b429'); }
+  refreshUI();
+}
+
+async function saveSpareParts(idx, inputEl, btnEl) {
+  const parts=inputEl.value.trim();
+  if(!parts){showToast('⚠ Enter spare parts!','#ff6b35');return;}
+  btnEl.disabled=true; btnEl.innerText='...';
+  const ticket=myTickets[idx];
+  const timestamp=getVal(ticket,'Timestamp');
+  try {
+    await fetchJSONP(SCRIPT+'?action=updateStatus&timestamp='+encodeURIComponent(timestamp)+'&status=Waiting&spareParts='+encodeURIComponent(parts));
+    myTickets[idx]['_spareParts']=parts;
+    showToast('🔧 Spare parts saved!');
+  } catch(e) { myTickets[idx]['_spareParts']=parts; showToast('⚠ Local only','#f0b429'); }
+  refreshUI();
+}
+
+function renderNewTickets(){
+  const tbody=document.getElementById('tbody-new');
+  if(newTickets.length===0){
+    tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">No new unassigned tickets 🎉</td></tr>`;
+    return;
+  }
+  tbody.innerHTML=newTickets.map((r,i)=>{
+    const timestamp=getVal(r,'Timestamp');
+    const clinicName=getVal(r,'Customer/Account Name','Clinic/Hospital Name');
+    const contactName=getVal(r,'Contact Person Name');
+    const phoneNum=getVal(r,'Mobile Number');
+    const location=getVal(r,'Location');
+    const description=getVal(r,'Problem Description','Description of the Technical Issue');
+    const contactCell=`<div class="client-info">
+      ${contactName?`<span class="cname">👤 ${contactName}</span>`:'<span style="color:var(--muted)">-</span>'}
+      ${phoneNum?`<a class="phone" href="tel:${phoneNum}">📞 ${phoneNum}</a>`:''}
+      ${location?`<span class="clocation">📍 ${location}</span>`:''}
+    </div>`;
+    return `<tr class="new-ticket-row">
+      <td>${i+1}</td>
+      <td style="font-weight:600">${clinicName||'-'}</td>
+      <td>${contactCell}</td>
+      <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">${description||'-'}</td>
+      <td><button class="claim-btn" id="cbtn-${i}" onclick="claimTicket('${timestamp}',document.getElementById('cbtn-${i}'))">⚡ Claim</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderMyTickets(){
+  let tickets=myTickets.filter(r=>{
+    const s=getStatus(r).toLowerCase();
+    return selectedStatuses.some(status=>{
+      if(status==='Waiting')return s.includes('waiting');
+      if(status==='New')return s==='new'||s==='';
+      if(status==='In Progress')return s.includes('in progress');
+      if(status==='Closed')return s.includes('closed');
+      return false;
+    });
+  });
+  const tbody=document.getElementById('tbody-mine');
+  if(tickets.length===0){
+    tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">No tickets found</td></tr>`;
+    return;
+  }
+  tbody.innerHTML=tickets.map((r,i)=>{
+    const idx=myTickets.indexOf(r);
+    const statusVal=getStatus(r);
+    const spareParts=r['_spareParts']||getVal(r,'What spare part is needed?');
+    const isWaiting=statusVal.toLowerCase().includes('waiting');
+    const clinicName=getVal(r,'Customer/Account Name','Clinic/Hospital Name');
+    const contactName=getVal(r,'Contact Person Name');
+    const phoneNum=getVal(r,'Mobile Number');
+    const location=getVal(r,'Location');
+    const description=getVal(r,'Problem Description','Description of the Technical Issue');
+    const contactCell=`<div class="client-info">
+      ${contactName?`<span class="cname">👤 ${contactName}</span>`:'<span style="color:var(--muted)">-</span>'}
+      ${phoneNum?`<a class="phone" href="tel:${phoneNum}">📞 ${phoneNum}</a>`:''}
+      ${location?`<span class="clocation">📍 ${location}</span>`:''}
+    </div>`;
+    const statusCell=`<select class="status-select" onchange="updateStatus(${idx},this.value,this)">
+      ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${statusVal===s?'selected':''}>${s==='Waiting'?'Waiting for Spare Parts':s}</option>`).join('')}
+    </select>`;
+    const spareCell=isWaiting
+      ?`<div class="spare-wrap">
+          ${spareParts?`<span class="spare-text">🔧 ${spareParts}</span>`:''}
+          <input class="spare-input" id="spare-${idx}" placeholder="Enter parts..." value="${spareParts}"/>
+          <button class="save-btn" id="sbtn-${idx}" onclick="saveSpareParts(${idx},document.getElementById('spare-${idx}'),document.getElementById('sbtn-${idx}'))">💾 Save</button>
+        </div>`
+      :`<span class="spare-text">${spareParts?'🔧 '+spareParts:'-'}</span>`;
+    return `<tr>
+      <td>${i+1}</td>
+      <td style="font-weight:600">${clinicName||'-'}</td>
+      <td>${contactCell}</td>
+      <td>${statusCell}</td>
+      <td>${spareCell}</td>
+      <td><span style="color:#00e5a0">${calculateDuration(getVal(r,'Timestamp'),getVal(r,'Closing Date'))}</span></td>
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">${description||'-'}</td>
+    </tr>`;
+  }).join('');
+}
+</script>
+</body>
+</html>
