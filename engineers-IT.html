@@ -61,7 +61,7 @@
   td { padding:10px 16px; border-bottom:1px solid var(--border); vertical-align:middle; }
   .status-select { background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:4px 6px; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; outline:none; width:100%; }
   .spare-wrap { display:flex; flex-direction:column; gap:4px; }
-  .spare-input { background:var(--surface2); color:var(--text); border:1px solid var(--waiting); border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace; font-size:11px; outline:none; width:130px; }
+  .spare-input { background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace; font-size:11px; outline:none; width:130px; }
   .spare-input::placeholder { color:var(--muted); }
   .save-btn { background:var(--waiting); color:#000; border:none; border-radius:6px; padding:3px 8px; font-family:'Syne',sans-serif; font-size:10px; font-weight:800; cursor:pointer; }
   .spare-text { color:var(--waiting); font-size:11px; }
@@ -121,7 +121,6 @@
 </head>
 <body>
 
-<!-- PIN SCREEN -->
 <div id="pin-screen">
   <div>
     <div class="pin-title">Service <span>Tickets</span></div>
@@ -149,24 +148,21 @@
   </div>
 </div>
 
-<!-- CONFIRM DIALOG -->
 <div id="confirm-overlay">
   <div class="confirm-box">
     <h3 id="confirm-title">Confirm Status Change</h3>
     <p id="confirm-msg">Are you sure?</p>
     <div class="confirm-btns">
       <button class="confirm-yes" onclick="confirmYes()">Yes, Change</button>
-      <button class="confirm-no" onclick="confirmNo()">Cancel</button>
+      <button class="confirm-no" onclick="cancelConfirm()">Cancel</button>
     </div>
   </div>
 </div>
 
-<!-- ADD TICKET MODAL -->
 <div class="modal-overlay" id="modal">
   <div class="modal">
     <h2 id="modal-title">+ Add New Ticket</h2>
 
-    <!-- Status selector — only shown for IT engineer (Shakeel) -->
     <div class="form-group" id="status-selector-group" style="display:none">
       <label>Ticket Status</label>
       <div class="status-selector">
@@ -207,7 +203,6 @@
   </div>
 </div>
 
-<!-- MAIN DASHBOARD -->
 <div class="container" id="main" style="display:none">
   <header>
     <div class="logo-area">
@@ -216,7 +211,7 @@
     </div>
     <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
       <button class="add-btn" onclick="openModal()">+ Add Ticket</button>
-      <button class="refresh-btn" onclick="loadData()" id="rbtn">↻ Refresh</button>
+      <button class="refresh-btn" onclick="loadData(true)" id="rbtn">↻ Refresh</button>
       <button class="logout-btn" onclick="logout()">Sign Out</button>
     </div>
   </header>
@@ -243,7 +238,6 @@
       </div>
     </div>
 
-    <!-- Unassigned hardware tickets — hidden for Shakeel -->
     <div class="table-section" id="new-tickets-section">
       <div class="table-header" style="color:var(--unassigned)">⚡ Available New Tickets — Tap to Claim</div>
       <div class="table-scroll">
@@ -256,7 +250,6 @@
       </div>
     </div>
 
-    <!-- My assigned tickets -->
     <div class="table-section">
       <div class="table-header" style="color:var(--accent)">📋 My Assigned Tickets</div>
       <div class="table-scroll">
@@ -326,9 +319,8 @@ function unlockDashboard(){
   document.getElementById('pin-screen').style.display='none';
   document.getElementById('main').style.display='block';
   document.getElementById('eng-title').innerHTML=MY_NAME+' — <span>My Dashboard</span>';
-  // Hide claim section for IT engineer
   if(eng.isIT) document.getElementById('new-tickets-section').style.display='none';
-  loadData();
+  loadData(true);
 }
 function logout(){
   localStorage.removeItem('eng_name');
@@ -350,21 +342,20 @@ window.onload=()=>{
   }
 };
 
-// ── TOAST ────────────────────────────────────────────────────
 function showToast(msg,color){
   const t=document.getElementById('toast');
   t.innerText=msg;t.style.background=color||'#00e5a0';
   t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);
 }
 
-// ── CONFIRM ──────────────────────────────────────────────────
 function confirmYes(){
   document.getElementById('confirm-overlay').classList.remove('show');
   if(pendingStatusChange){pendingStatusChange();pendingStatusChange=null;}
 }
-function confirmNo(){
+function cancelConfirm(){
   document.getElementById('confirm-overlay').classList.remove('show');
-  pendingStatusChange=null;refreshUI();
+  pendingStatusChange=null;
+  refreshUI();
 }
 function showConfirm(title,msg,callback){
   document.getElementById('confirm-title').innerText=title;
@@ -373,17 +364,13 @@ function showConfirm(title,msg,callback){
   document.getElementById('confirm-overlay').classList.add('show');
 }
 
-// ── MODAL ────────────────────────────────────────────────────
 function openModal(){
   const isIT=ENGINEERS[MY_NAME]?.isIT;
-  // Show status selector only for IT engineer
   document.getElementById('status-selector-group').style.display=isIT?'block':'none';
   document.getElementById('modal-title').innerText=isIT?'+ Add IT Ticket':'+ Add Hardware Ticket';
   selectedTicketStatus='In Progress';
-  // Reset status selector
   ['inprogress','waiting','closed'].forEach(s=>document.getElementById('sopt-'+s).className='status-option');
   document.getElementById('sopt-inprogress').className='status-option sel-inprogress';
-  // Reset fields
   document.getElementById('f-clinic').value='';
   document.getElementById('f-phone').value='';
   document.getElementById('f-device').value='';
@@ -406,26 +393,18 @@ async function submitTicket(){
   const device=document.getElementById('f-device').value.trim();
   const location=document.getElementById('f-location').value.trim();
   const desc=document.getElementById('f-desc').value.trim();
-
   if(!clinic){showToast('⚠ Please enter clinic name!','#ff6b35');return;}
-  if(!desc){showToast('⚠ Please enter description!','#ff6b35');return;}
-
   const btn=document.getElementById('submit-btn');
   btn.disabled=true;btn.innerText='Adding...';
-
   const isIT=ENGINEERS[MY_NAME]?.isIT;
   const timestamp=new Date().toISOString();
   const ticketType=isIT?'Computer / System (IT)':'Equipment / Dental Unit';
-  // IT engineer: assigned to themselves with chosen status
-  // Hardware engineer: assigned to themselves as In Progress
-  const assignName=MY_NAME;
   const status=isIT?selectedTicketStatus:'In Progress';
-
   try{
     await fetchJSONP(SCRIPT+
       '?action=addRow'+
       '&timestamp='+encodeURIComponent(timestamp)+
-      '&name='+encodeURIComponent(assignName)+
+      '&name='+encodeURIComponent(MY_NAME)+
       '&clinic='+encodeURIComponent(clinic)+
       '&phone='+encodeURIComponent(phone)+
       '&device='+encodeURIComponent(device)+
@@ -436,12 +415,11 @@ async function submitTicket(){
     );
     closeModal();
     showToast('✅ Ticket added!');
-    await loadData();
+    loadData(true);
   }catch(e){showToast('⚠ Error adding ticket','#ff6b35');}
   btn.disabled=false;btn.innerText='➕ Add Ticket';
 }
 
-// ── JSONP ────────────────────────────────────────────────────
 function fetchJSONP(url){
   return new Promise((resolve,reject)=>{
     const cbName='cb_'+Math.random().toString(36).substr(2,9);
@@ -449,13 +427,13 @@ function fetchJSONP(url){
     const timeout=setTimeout(()=>{try{document.body.removeChild(script);}catch(e){}delete window[cbName];reject(new Error('Timeout'));},15000);
     window[cbName]=(data)=>{clearTimeout(timeout);try{document.body.removeChild(script);}catch(e){}delete window[cbName];resolve(data);};
     script.onerror=()=>{clearTimeout(timeout);try{document.body.removeChild(script);}catch(e){}delete window[cbName];reject(new Error('Script error'));};
+    // CACHE BUSTER: Added &t= parameter
     script.src=url+(url.includes('?')?'&':'?')+'callback='+cbName+'&t='+Date.now();
     document.body.appendChild(script);
   });
 }
 
-// ── LOAD DATA ────────────────────────────────────────────────
-async function loadData(){
+async function loadData(forceRefresh = false){
   const btn=document.getElementById('rbtn');
   btn.style.opacity='0.5';btn.innerText='↻ Loading...';
   try{
@@ -488,7 +466,6 @@ function calculateDuration(start,end){
   return diffDays>0?`${diffDays}d ${diffHrs%24}h`:`${diffHrs}h`;
 }
 
-// ── STATS ────────────────────────────────────────────────────
 function updateStats(){
   const c={closed:0,open:0,inprogress:0,waiting:0};
   myTickets.forEach(r=>{
@@ -511,17 +488,15 @@ function toggleSlice(status){
   renderMyTickets();
 }
 
-// ── CLAIM ────────────────────────────────────────────────────
 async function claimTicket(timestamp,btnEl){
   btnEl.disabled=true;btnEl.innerText='Claiming...';
   try{
     const result=await fetchJSONP(SCRIPT+'?action=claim&timestamp='+encodeURIComponent(timestamp)+'&name='+encodeURIComponent(MY_NAME));
-    if(result.claimed){showToast('✅ Ticket claimed! → In Progress');await loadData();}
-    else{showToast('⚠ Already claimed by '+result.assignedTo,'#ff6b35');await loadData();}
+    if(result.claimed){showToast('✅ Ticket claimed!');loadData(true);}
+    else{showToast('⚠ Already claimed by '+result.assignedTo,'#ff6b35');loadData(true);}
   }catch(e){showToast('⚠ Error claiming','#ff6b35');btnEl.disabled=false;btnEl.innerText='⚡ Claim';}
 }
 
-// ── STATUS UPDATE ────────────────────────────────────────────
 function updateStatus(idx,newStatus,selectEl){
   const oldStatus=getStatus(myTickets[idx]);
   showConfirm(
@@ -535,14 +510,13 @@ function updateStatus(idx,newStatus,selectEl){
         await fetchJSONP(SCRIPT+'?action=updateStatus&timestamp='+encodeURIComponent(timestamp)+'&status='+encodeURIComponent(newStatus));
         myTickets[idx]['Current Status']=newStatus;
         if(newStatus!=='Waiting')myTickets[idx]['_spareParts']='';
-        showToast('✅ Status: '+(newStatus==='Waiting'?'Waiting for Spare Parts':newStatus));
-      }catch(e){myTickets[idx]['Current Status']=newStatus;showToast('⚠ Local only','#f0b429');}
-      refreshUI();
+        showToast('✅ Status updated');
+        loadData(true);
+      }catch(e){showToast('⚠ Error updating','#ff6b35');loadData(true);}
     }
   );
 }
 
-// ── SPARE PARTS ──────────────────────────────────────────────
 async function saveSpareParts(idx,inputEl,btnEl){
   const parts=inputEl.value.trim();
   if(!parts){showToast('⚠ Enter spare parts!','#ff6b35');return;}
@@ -551,19 +525,19 @@ async function saveSpareParts(idx,inputEl,btnEl){
   const timestamp=getVal(ticket,'Timestamp');
   try{
     await fetchJSONP(SCRIPT+'?action=updateStatus&timestamp='+encodeURIComponent(timestamp)+'&status=Waiting&spareParts='+encodeURIComponent(parts));
-    myTickets[idx]['_spareParts']=parts;showToast('🔧 Spare parts saved!');
-  }catch(e){myTickets[idx]['_spareParts']=parts;showToast('⚠ Local only','#f0b429');}
-  refreshUI();
+    myTickets[idx]['_spareParts']=parts;
+    showToast('🔧 Spare parts saved!');
+    loadData(true);
+  }catch(e){showToast('⚠ Error saving','#ff6b35');loadData(true);}
 }
 
-// ── RENDER NEW TICKETS ───────────────────────────────────────
 function renderNewTickets(){
   const tbody=document.getElementById('tbody-new');
   if(!tbody)return;
   if(newTickets.length===0){tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">No new unassigned tickets 🎉</td></tr>`;return;}
   tbody.innerHTML=newTickets.map((r,i)=>{
     const timestamp=getVal(r,'Timestamp');
-    const clinicName=getVal(r,'Customer/Account Name','Clinic/Hospital Name');
+    const clinicName=getVal(r,'Customer/Account Name','Clinic/Hospital Name','Clinic / Hospital Name');
     const contactName=getVal(r,'Contact Person Name');
     const phoneNum=getVal(r,'Mobile Number');
     const location=getVal(r,'Location');
@@ -583,7 +557,6 @@ function renderNewTickets(){
   }).join('');
 }
 
-// ── RENDER MY TICKETS ────────────────────────────────────────
 function renderMyTickets(){
   let tickets=myTickets.filter(r=>{
     const s=getStatus(r).toLowerCase();
@@ -605,7 +578,7 @@ function renderMyTickets(){
     const isWaiting=statusVal.toLowerCase().includes('waiting');
     const ticketType=getVal(r,'Ticket Type');
     const isIT=ticketType.toLowerCase().includes('it')||ticketType.toLowerCase().includes('computer')||ticketType.toLowerCase().includes('system');
-    const clinicName=getVal(r,'Customer/Account Name','Clinic/Hospital Name');
+    const clinicName=getVal(r,'Customer/Account Name','Clinic/Hospital Name','Clinic / Hospital Name');
     const contactName=getVal(r,'Contact Person Name');
     const phoneNum=getVal(r,'Mobile Number');
     const location=getVal(r,'Location');
