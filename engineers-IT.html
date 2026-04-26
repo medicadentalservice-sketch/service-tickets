@@ -3,128 +3,165 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Engineer Dashboard</title>
+<title>Service Tickets</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   :root {
-    --bg: #0a0c10; --surface: #111318; --surface2: #181c23; --border: #ffffff0f;
-    --accent: #00e5a0; --text: #f0f2f7; --muted: #6b7280;
-    --closed: #00e5a0; --open: #4d9fff; --inprogress: #f0b429; --waiting: #ff6b35;
-    --unassigned: #ff00ff;
+    --bg:#0a0c10;--surface:#111318;--surface2:#181c23;--border:#ffffff0f;
+    --accent:#00e5a0;--text:#f0f2f7;--muted:#6b7280;
+    --closed:#00e5a0;--open:#4d9fff;--inprogress:#f0b429;--waiting:#ff6b35;--unassigned:#ff00ff;
   }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'DM Mono',monospace; background:var(--bg); color:var(--text); min-height:100vh; }
-  body::before { content:''; position:fixed; inset:0; background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
-  .container { position:relative; z-index:1; max-width:1400px; margin:0 auto; padding:40px 24px; }
-  header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:32px; flex-wrap:wrap; gap:20px; border-bottom:1px solid var(--border); padding-bottom:20px; }
-  .logo-area h1 { font-family:'Syne',sans-serif; font-size:24px; font-weight:800; }
-  .logo-area h1 span { color:var(--accent); }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  .container{position:relative;z-index:1;max-width:1500px;margin:0 auto;padding:40px 24px;}
 
-  /* PIN SCREEN */
-  #pin-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; gap:32px; position:fixed; inset:0; z-index:100; background:var(--bg); }
-  .pin-title { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; text-align:center; }
-  .pin-title span { color:var(--accent); }
-  .pin-dots { display:flex; gap:16px; }
-  .pin-dot { width:18px; height:18px; border-radius:50%; border:2px solid var(--muted); transition:all .2s; }
-  .pin-dot.filled { background:var(--accent); border-color:var(--accent); }
-  .pin-dot.error { background:#ff4444; border-color:#ff4444; animation:shake .3s ease; }
-  @keyframes shake { 0%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}100%{transform:translateX(0)} }
-  .pin-pad { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
-  .pin-key { width:72px; height:72px; border-radius:50%; border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:'Syne',sans-serif; font-size:20px; font-weight:800; cursor:pointer; transition:all .15s; display:flex; align-items:center; justify-content:center; }
-  .pin-key:hover { background:var(--surface2); border-color:var(--accent); transform:scale(1.05); }
-  .pin-key:active { transform:scale(0.95); }
-  .pin-key.del { font-size:16px; color:var(--muted); }
-  .pin-key.zero { grid-column:2; }
-  .pin-error { color:#ff4444; font-size:12px; height:16px; text-align:center; }
+  /* PIN */
+  #pin-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:32px;position:fixed;inset:0;z-index:100;background:var(--bg);}
+  .pin-title{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;text-align:center;}
+  .pin-title span{color:var(--accent);}
+  .pin-dots{display:flex;gap:16px;}
+  .pin-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--muted);transition:all .2s;}
+  .pin-dot.filled{background:var(--accent);border-color:var(--accent);}
+  .pin-dot.error{background:#ff4444;border-color:#ff4444;animation:shake .3s ease;}
+  @keyframes shake{0%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}100%{transform:translateX(0)}}
+  .pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  .pin-key{width:72px;height:72px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:'Syne',sans-serif;font-size:20px;font-weight:800;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;}
+  .pin-key:hover{background:var(--surface2);border-color:var(--accent);transform:scale(1.05);}
+  .pin-key:active{transform:scale(0.95);}
+  .pin-key.del{font-size:16px;color:var(--muted);}
+  .pin-key.zero{grid-column:2;}
+  .pin-error{color:#ff4444;font-size:12px;height:16px;text-align:center;}
 
-  /* MAIN */
-  #loading { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; gap:20px; }
-  .spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
-  @keyframes spin { to{transform:rotate(360deg)} }
-  #content { display:none; animation:fadeIn .4s ease; }
-  @keyframes fadeIn { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)} }
-  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
-  @media(max-width:700px){ .stats-grid { grid-template-columns:repeat(2,1fr); } }
-  .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; position:relative; cursor:pointer; transition:all 0.2s; opacity:0.5; }
-  .stat-card.active-slice { border:1px solid white; opacity:1; transform:scale(1.02); }
-  .stat-card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:3px; }
-  .stat-card.open::after { background:var(--open); }
-  .stat-card.inprogress::after { background:var(--inprogress); }
-  .stat-card.waiting::after { background:var(--waiting); }
-  .stat-card.closed::after { background:var(--closed); }
-  .stat-value { font-family:'Syne',sans-serif; font-size:42px; font-weight:800; line-height:1; margin-top:10px; }
-  .table-section { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:28px; }
-  .table-header { padding:16px 20px; background:var(--surface2); border-bottom:1px solid var(--border); font-family:'Syne',sans-serif; font-weight:800; font-size:14px; }
-  .table-scroll { overflow-x:auto; }
-  table { width:100%; border-collapse:collapse; font-size:12px; min-width:900px; }
-  th { padding:12px 16px; text-align:left; background:var(--surface2); color:var(--muted); text-transform:uppercase; font-size:10px; white-space:nowrap; }
-  td { padding:10px 16px; border-bottom:1px solid var(--border); vertical-align:middle; }
-  .status-select { background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:4px 6px; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; outline:none; width:100%; }
-  .spare-wrap { display:flex; flex-direction:column; gap:4px; }
-  .spare-input { background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-family:'DM Mono',monospace; font-size:11px; outline:none; width:130px; }
-  .spare-input::placeholder { color:var(--muted); }
-  .save-btn { background:var(--waiting); color:#000; border:none; border-radius:6px; padding:3px 8px; font-family:'Syne',sans-serif; font-size:10px; font-weight:800; cursor:pointer; }
-  .spare-text { color:var(--waiting); font-size:11px; }
-  .claim-btn { background:var(--unassigned); color:#000; border:none; border-radius:6px; padding:6px 14px; font-family:'Syne',sans-serif; font-size:11px; font-weight:800; cursor:pointer; transition:all .2s; animation:pulse 2s infinite; }
-  .claim-btn:hover { opacity:0.8; transform:scale(1.05); }
-  .claim-btn:disabled { opacity:0.4; cursor:not-allowed; animation:none; }
-  @keyframes pulse { 0%{opacity:1}50%{opacity:0.7}100%{opacity:1} }
-  .refresh-btn { background:var(--accent); border:none; color:#000; padding:10px 20px; border-radius:8px; cursor:pointer; font-family:'Syne',sans-serif; font-size:12px; font-weight:700; }
-  .add-btn { background:#4d9fff; border:none; color:#fff; padding:10px 20px; border-radius:8px; cursor:pointer; font-family:'Syne',sans-serif; font-size:12px; font-weight:700; }
-  .logout-btn { background:transparent; border:1px solid var(--border); color:var(--muted); padding:10px 16px; border-radius:8px; cursor:pointer; font-family:'DM Mono',monospace; font-size:11px; }
-  .logout-btn:hover { border-color:#ff4444; color:#ff4444; }
-  .client-info { display:flex; flex-direction:column; gap:2px; }
-  .client-info .cname { font-weight:700; font-size:12px; }
-  .client-info .phone { color:#4d9fff; font-size:11px; text-decoration:none; }
-  .client-info .clocation { color:var(--muted); font-size:10px; }
-  .new-ticket-row { background:#ff00ff08; }
-  .type-badge { display:inline-flex; padding:2px 8px; border-radius:100px; font-size:9px; font-weight:700; }
-  .type-it { background:#4d9fff20; color:#4d9fff; border:1px solid #4d9fff40; }
-  .type-hw { background:#f0b42920; color:#f0b429; border:1px solid #f0b42940; }
-  #toast { position:fixed; bottom:30px; right:30px; color:#000; padding:12px 20px; border-radius:10px; font-family:'Syne',sans-serif; font-weight:800; font-size:13px; transform:translateY(100px); opacity:0; transition:all .3s; z-index:999; }
-  #toast.show { transform:translateY(0); opacity:1; }
+  /* HEADER */
+  header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:20px;border-bottom:1px solid var(--border);padding-bottom:20px;}
+  .logo-area h1{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;}
+  .logo-area h1 span{color:var(--accent);}
+  .header-btns{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
 
-  /* CONFIRM DIALOG */
-  #confirm-overlay { display:none; position:fixed; inset:0; background:#000000aa; z-index:200; align-items:center; justify-content:center; }
-  #confirm-overlay.show { display:flex; }
-  .confirm-box { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:32px; max-width:360px; width:90%; text-align:center; }
-  .confirm-box h3 { font-family:'Syne',sans-serif; font-size:18px; margin-bottom:12px; }
-  .confirm-box p { color:var(--muted); font-size:12px; margin-bottom:24px; }
-  .confirm-btns { display:flex; gap:12px; justify-content:center; }
-  .confirm-yes { background:var(--accent); color:#000; border:none; border-radius:8px; padding:10px 24px; font-family:'Syne',sans-serif; font-weight:800; cursor:pointer; }
-  .confirm-no { background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:10px 24px; font-family:'Syne',sans-serif; font-weight:800; cursor:pointer; }
+  /* BUTTONS */
+  .btn{border:none;border-radius:8px;padding:10px 18px;cursor:pointer;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;transition:all .2s;}
+  .btn-green{background:var(--accent);color:#000;}
+  .btn-blue{background:#4d9fff;color:#fff;}
+  .btn-orange{background:var(--waiting);color:#000;}
+  .btn-muted{background:transparent;border:1px solid var(--border);color:var(--muted);}
+  .btn-muted:hover{border-color:#ff4444;color:#ff4444;}
+  .btn-red{background:#ff444420;color:#ff4444;border:1px solid #ff444430;}
+  .btn-red:hover{background:#ff444440;}
+  .btn-small{padding:4px 10px;font-size:10px;border-radius:6px;}
 
-  /* ADD TICKET MODAL */
-  .modal-overlay { display:none; position:fixed; inset:0; background:#000000bb; z-index:200; align-items:center; justify-content:center; padding:20px; }
-  .modal-overlay.show { display:flex; }
-  .modal { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:32px; width:100%; max-width:520px; max-height:90vh; overflow-y:auto; }
-  .modal h2 { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; margin-bottom:24px; color:#4d9fff; }
-  .form-group { margin-bottom:16px; }
-  .form-group label { display:block; font-size:11px; color:var(--muted); text-transform:uppercase; margin-bottom:6px; letter-spacing:1px; }
-  .form-group input, .form-group select, .form-group textarea { width:100%; background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-family:'DM Mono',monospace; font-size:12px; outline:none; }
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:#4d9fff; }
-  .form-group textarea { resize:vertical; min-height:80px; }
-  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  .modal-btns { display:flex; gap:12px; margin-top:24px; }
-  .modal-submit { background:#4d9fff; color:#fff; border:none; border-radius:8px; padding:12px 24px; font-family:'Syne',sans-serif; font-weight:800; font-size:13px; cursor:pointer; flex:1; }
-  .modal-submit:disabled { opacity:0.5; cursor:not-allowed; }
-  .modal-cancel { background:var(--surface2); color:var(--muted); border:1px solid var(--border); border-radius:8px; padding:12px 24px; font-family:'Syne',sans-serif; font-weight:800; font-size:13px; cursor:pointer; }
+  /* ENGINEER CARDS (manager only) */
+  .eng-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:28px;}
+  .eng-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+  .eng-card:hover{transform:translateY(-2px);background:var(--surface2);}
+  .eng-card.active{border:1px solid white;background:var(--surface2);}
+  .eng-card-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;margin-bottom:8px;}
 
-  /* STATUS TYPE SELECTOR — only for IT engineer */
-  .status-selector { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
-  .status-option { background:var(--surface2); border:2px solid var(--border); border-radius:10px; padding:12px 8px; cursor:pointer; text-align:center; transition:all .2s; font-family:'Syne',sans-serif; font-weight:800; font-size:12px; }
-  .status-option:hover { border-color:#4d9fff; }
-  .status-option.sel-inprogress { border-color:var(--inprogress); background:#f0b42915; color:var(--inprogress); }
-  .status-option.sel-waiting { border-color:var(--waiting); background:#ff6b3515; color:var(--waiting); }
-  .status-option.sel-closed { border-color:var(--closed); background:#00e5a015; color:var(--closed); }
+  /* STATS */
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+  @media(max-width:700px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;position:relative;cursor:pointer;transition:all 0.2s;opacity:0.5;}
+  .stat-card.active-slice{border:1px solid white;opacity:1;transform:scale(1.02);}
+  .stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;}
+  .stat-card.open::after{background:var(--open);}
+  .stat-card.inprogress::after{background:var(--inprogress);}
+  .stat-card.waiting::after{background:var(--waiting);}
+  .stat-card.closed::after{background:var(--closed);}
+  .stat-value{font-family:'Syne',sans-serif;font-size:42px;font-weight:800;line-height:1;margin-top:10px;}
+
+  /* TABLES */
+  .table-section{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:28px;}
+  .table-header{padding:16px 20px;background:var(--surface2);border-bottom:1px solid var(--border);font-family:'Syne',sans-serif;font-weight:800;font-size:14px;}
+  .table-scroll{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:12px;min-width:900px;}
+  th{padding:12px 16px;text-align:left;background:var(--surface2);color:var(--muted);text-transform:uppercase;font-size:10px;white-space:nowrap;}
+  td{padding:10px 16px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  .status-select{background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;outline:none;width:100%;}
+  .spare-wrap{display:flex;flex-direction:column;gap:4px;}
+  .spare-input{background:var(--surface2);color:var(--text);border:1px solid var(--waiting);border-radius:6px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:11px;outline:none;width:130px;}
+  .spare-input::placeholder{color:var(--muted);}
+  .save-btn{background:var(--waiting);color:#000;border:none;border-radius:6px;padding:3px 8px;font-family:'Syne',sans-serif;font-size:10px;font-weight:800;cursor:pointer;}
+  .spare-text{color:var(--waiting);font-size:11px;}
+  .claim-btn{background:var(--unassigned);color:#000;border:none;border-radius:6px;padding:6px 14px;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;cursor:pointer;transition:all .2s;animation:pulse 2s infinite;}
+  .claim-btn:disabled{opacity:0.4;cursor:not-allowed;animation:none;}
+  @keyframes pulse{0%{opacity:1}50%{opacity:0.7}100%{opacity:1}}
+  .client-info{display:flex;flex-direction:column;gap:2px;}
+  .client-info .cname{font-weight:700;font-size:12px;}
+  .client-info .phone{color:#4d9fff;font-size:11px;text-decoration:none;}
+  .client-info .clocation{color:var(--muted);font-size:10px;}
+  .new-ticket-row{background:#ff00ff08;}
+  .type-badge{display:inline-flex;padding:2px 8px;border-radius:100px;font-size:9px;font-weight:700;}
+  .type-it{background:#4d9fff20;color:#4d9fff;border:1px solid #4d9fff40;}
+  .type-hw{background:#f0b42920;color:#f0b429;border:1px solid #f0b42940;}
+  .assign-wrap{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .assign-select{background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;outline:none;max-width:110px;}
+  .assign-select.unassigned{background:#1a0a1a;color:var(--unassigned);border:1px solid #ff00ff40;animation:pulse 2s infinite;}
+
+  /* LOADING */
+  #loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:20px;}
+  .spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #content{display:none;animation:fadeIn .4s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+  /* TOAST */
+  #toast{position:fixed;bottom:30px;right:30px;color:#000;padding:12px 20px;border-radius:10px;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;transform:translateY(100px);opacity:0;transition:all .3s;z-index:999;}
+  #toast.show{transform:translateY(0);opacity:1;}
+
+  /* OVERLAYS */
+  .overlay{display:none;position:fixed;inset:0;background:#000000bb;z-index:200;align-items:center;justify-content:center;padding:20px;}
+  .overlay.show{display:flex;}
+  .dialog{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;}
+  .dialog h2{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:24px;color:var(--accent);}
+  .dialog h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:12px;}
+  .dialog p{color:var(--muted);font-size:12px;margin-bottom:24px;}
+  .form-group{margin-bottom:14px;}
+  .form-group label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;letter-spacing:1px;}
+  .form-group input,.form-group select,.form-group textarea{width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:'DM Mono',monospace;font-size:12px;outline:none;}
+  .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent);}
+  .form-group textarea{resize:vertical;min-height:70px;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .dialog-btns{display:flex;gap:12px;margin-top:20px;justify-content:flex-end;}
+
+  /* STATUS SELECTOR */
+  .status-selector{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px;}
+  .status-opt{background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:8px 4px;cursor:pointer;text-align:center;transition:all .2s;font-family:'Syne',sans-serif;font-weight:800;font-size:10px;}
+  .status-opt:hover{border-color:var(--accent);}
+  .status-opt.sel-new{border-color:var(--open);background:#4d9fff15;color:var(--open);}
+  .status-opt.sel-inprogress{border-color:var(--inprogress);background:#f0b42915;color:var(--inprogress);}
+  .status-opt.sel-waiting{border-color:var(--waiting);background:#ff6b3515;color:var(--waiting);}
+  .status-opt.sel-closed{border-color:var(--closed);background:#00e5a015;color:var(--closed);}
+
+  /* TYPE SELECTOR */
+  .type-selector{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;}
+  .type-opt{background:var(--surface2);border:2px solid var(--border);border-radius:10px;padding:14px 8px;cursor:pointer;text-align:center;transition:all .2s;}
+  .type-opt:hover{border-color:var(--accent);}
+  .type-opt.sel-hw{border-color:var(--inprogress);background:#f0b42910;}
+  .type-opt.sel-it{border-color:var(--open);background:#4d9fff10;}
+  .type-opt .ticon{font-size:24px;margin-bottom:6px;}
+  .type-opt .tlabel{font-family:'Syne',sans-serif;font-weight:800;font-size:12px;}
+  .type-opt .tsub{font-size:10px;color:var(--muted);margin-top:3px;}
+
+  /* CHART */
+  .chart-container{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:28px;}
+  .chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+  .chart-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;}
+  .time-toggle{display:flex;gap:6px;}
+  .time-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:6px;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;}
+  .time-btn.active{background:var(--accent);color:#000;border-color:var(--accent);}
+  .chart-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+  .chart-tab{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:6px;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;}
+  .chart-tab.active{border-color:var(--accent);color:var(--accent);}
 </style>
 </head>
 <body>
 
+<!-- PIN SCREEN -->
 <div id="pin-screen">
   <div>
     <div class="pin-title">Service <span>Tickets</span></div>
-    <div style="color:var(--muted);font-size:12px;text-align:center;margin-top:8px">Enter your PIN to access your dashboard</div>
+    <div style="color:var(--muted);font-size:12px;text-align:center;margin-top:8px">Enter your PIN to continue</div>
   </div>
   <div class="pin-dots">
     <div class="pin-dot" id="dot-0"></div>
@@ -148,77 +185,149 @@
   </div>
 </div>
 
-<div id="confirm-overlay">
-  <div class="confirm-box">
-    <h3 id="confirm-title">Confirm Status Change</h3>
+<!-- CONFIRM OVERLAY -->
+<div class="overlay" id="confirm-overlay">
+  <div class="dialog" style="max-width:380px;text-align:center;">
+    <h3 id="confirm-title">Confirm</h3>
     <p id="confirm-msg">Are you sure?</p>
-    <div class="confirm-btns">
-      <button class="confirm-yes" onclick="confirmYes()">Yes, Change</button>
-      <button class="confirm-no" onclick="cancelConfirm()">Cancel</button>
+    <div class="dialog-btns" style="justify-content:center;">
+      <button class="btn btn-red" onclick="confirmYes()">Yes, Confirm</button>
+      <button class="btn btn-muted" onclick="confirmNo()">Cancel</button>
     </div>
   </div>
 </div>
 
-<div class="modal-overlay" id="modal">
-  <div class="modal">
-    <h2 id="modal-title">+ Add New Ticket</h2>
+<!-- ADD / EDIT TICKET OVERLAY -->
+<div class="overlay" id="ticket-overlay">
+  <div class="dialog">
+    <h2 id="ticket-modal-title">+ Add Ticket</h2>
 
-    <div class="form-group" id="status-selector-group" style="display:none">
-      <label>Ticket Status</label>
+    <!-- Type selector (manager only) -->
+    <div class="form-group" id="type-group" style="display:none">
+      <label>Type of Problem</label>
+      <div class="type-selector">
+        <div class="type-opt" id="topt-hw" onclick="selectType('hardware')">
+          <div class="ticon">🔧</div>
+          <div class="tlabel">Equipment / Dental Unit</div>
+          <div class="tsub">Hardware engineers</div>
+        </div>
+        <div class="type-opt" id="topt-it" onclick="selectType('it')">
+          <div class="ticon">💻</div>
+          <div class="tlabel">Computer / System (IT)</div>
+          <div class="tsub">Goes to Shakeel</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Assign to (manager only, hardware) -->
+    <div class="form-group" id="assign-group" style="display:none">
+      <label>Assign To (optional)</label>
+      <select id="f-assign">
+        <option value="">⚠ Leave unassigned</option>
+        <option value="Sam">Sam</option>
+        <option value="Bernard">Bernard</option>
+        <option value="Ghulam">Ghulam</option>
+        <option value="Ahmad">Ahmad</option>
+      </select>
+    </div>
+
+    <!-- Status selector -->
+    <div class="form-group" id="status-group">
+      <label>Status</label>
       <div class="status-selector">
-        <div class="status-option" id="sopt-inprogress" onclick="selectTicketStatus('In Progress')">🔄 In Progress</div>
-        <div class="status-option" id="sopt-waiting" onclick="selectTicketStatus('Waiting')">⏳ Waiting Parts</div>
-        <div class="status-option" id="sopt-closed" onclick="selectTicketStatus('Closed')">✅ Closed</div>
+        <div class="status-opt" id="sopt-New" onclick="selectStatus('New')">🆕 New</div>
+        <div class="status-opt" id="sopt-In Progress" onclick="selectStatus('In Progress')">🔄 In Progress</div>
+        <div class="status-opt" id="sopt-Waiting" onclick="selectStatus('Waiting')">⏳ Waiting</div>
+        <div class="status-opt" id="sopt-Closed" onclick="selectStatus('Closed')">✅ Closed</div>
       </div>
     </div>
 
     <div class="form-row">
       <div class="form-group">
-        <label>Clinic / Account Name *</label>
-        <input type="text" id="f-clinic" placeholder="e.g. Nahdi Care Clinic"/>
+        <label>Clinic / Account *</label>
+        <input type="text" id="f-clinic" placeholder="Nahdi Care Clinic"/>
       </div>
       <div class="form-group">
-        <label>Phone Number</label>
-        <input type="tel" id="f-phone" placeholder="e.g. 0501234567"/>
+        <label>Phone</label>
+        <input type="tel" id="f-phone" placeholder="0501234567"/>
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
         <label>Device Model</label>
-        <input type="text" id="f-device" placeholder="e.g. Romexis SW"/>
+        <input type="text" id="f-device" placeholder="Romexis SW"/>
       </div>
       <div class="form-group">
         <label>Location</label>
-        <input type="text" id="f-location" placeholder="e.g. Riyadh"/>
+        <input type="text" id="f-location" placeholder="Riyadh"/>
       </div>
     </div>
+
+    <!-- Spare parts (shown when Waiting selected) -->
+    <div class="form-group" id="spare-group" style="display:none">
+      <label>Spare Parts Needed</label>
+      <input type="text" id="f-spare" placeholder="e.g. Suction hose, PPM kit..."/>
+    </div>
+
     <div class="form-group">
-      <label>Problem Description *</label>
+      <label>Description *</label>
       <textarea id="f-desc" placeholder="Describe the issue..."></textarea>
     </div>
-    <div class="modal-btns">
-      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
-      <button class="modal-submit" id="submit-btn" onclick="submitTicket()">➕ Add Ticket</button>
+
+    <div class="dialog-btns">
+      <button class="btn btn-muted" onclick="closeTicketModal()">Cancel</button>
+      <button class="btn btn-green" id="ticket-submit-btn" onclick="submitTicket()">➕ Add Ticket</button>
     </div>
   </div>
 </div>
 
+<!-- CHART OVERLAY -->
+<div class="overlay" id="chart-overlay">
+  <div class="dialog" style="max-width:800px;width:100%;">
+    <h2>📊 Team Analysis</h2>
+    <div class="chart-tabs">
+      <button class="chart-tab active" onclick="switchChart('ratio')">Closed vs Open Ratio</button>
+      <button class="chart-tab" onclick="switchChart('perEngineer')">Tickets Per Engineer</button>
+      <button class="chart-tab" onclick="switchChart('status')">Status Breakdown</button>
+      <button class="chart-tab" onclick="switchChart('trend')">Trend Over Time</button>
+    </div>
+    <div class="chart-header">
+      <div class="chart-title" id="chart-title">Closed vs Open Ratio</div>
+      <div class="time-toggle">
+        <button class="time-btn active" onclick="setTimePeriod('week')">Week</button>
+        <button class="time-btn" onclick="setTimePeriod('month')">Month</button>
+        <button class="time-btn" onclick="setTimePeriod('all')">All Time</button>
+      </div>
+    </div>
+    <canvas id="mainChart" height="300"></canvas>
+    <div style="margin-top:20px;display:flex;justify-content:flex-end;">
+      <button class="btn btn-muted" onclick="closeChart()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN DASHBOARD -->
 <div class="container" id="main" style="display:none">
   <header>
     <div class="logo-area">
       <h1 id="eng-title">My <span>Dashboard</span></h1>
-      <p style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-top:5px;">Engineer View</p>
+      <p style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-top:5px;" id="eng-subtitle">Engineer View</p>
     </div>
-    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-      <button class="add-btn" onclick="openModal()">+ Add Ticket</button>
-      <button class="refresh-btn" onclick="loadData(true)" id="rbtn">↻ Refresh</button>
-      <button class="logout-btn" onclick="logout()">Sign Out</button>
+    <div class="header-btns">
+      <button class="btn btn-blue" onclick="openTicketModal(null)" id="add-btn">+ Add Ticket</button>
+      <button class="btn btn-orange" onclick="openChart()" id="chart-btn" style="display:none">📊 Analysis</button>
+      <button class="btn btn-green" onclick="loadData()" id="rbtn">↻ Refresh</button>
+      <button class="btn btn-muted" onclick="logout()">Sign Out</button>
     </div>
   </header>
 
-  <div id="loading"><div class="spinner"></div><p>Loading your tickets...</p></div>
+  <div id="loading"><div class="spinner"></div><p>Loading tickets...</p></div>
 
   <div id="content">
+
+    <!-- Engineer filter cards (manager only) -->
+    <div class="eng-cards" id="eng-cards" style="display:none"></div>
+
     <div class="stats-grid">
       <div class="stat-card open active-slice" id="btn-New" onclick="toggleSlice('New')">
         <small style="color:var(--muted)">NEW</small>
@@ -238,24 +347,35 @@
       </div>
     </div>
 
-    <div class="table-section" id="new-tickets-section">
+    <!-- Available tickets (hardware engineers only) -->
+    <div class="table-section" id="new-tickets-section" style="display:none">
       <div class="table-header" style="color:var(--unassigned)">⚡ Available New Tickets — Tap to Claim</div>
       <div class="table-scroll">
         <table>
-          <thead>
-            <tr><th>#</th><th>Clinic / Account</th><th>Contact & Phone</th><th>Description</th><th>Action</th></tr>
-          </thead>
+          <thead><tr><th>#</th><th>Clinic</th><th>Contact & Phone</th><th>Description</th><th>Action</th></tr></thead>
           <tbody id="tbody-new"></tbody>
         </table>
       </div>
     </div>
 
+    <!-- Main tickets table -->
     <div class="table-section">
-      <div class="table-header" style="color:var(--accent)">📋 My Assigned Tickets</div>
+      <div class="table-header" style="color:var(--accent)" id="table-title">📋 My Assigned Tickets</div>
       <div class="table-scroll">
         <table>
           <thead>
-            <tr><th>#</th><th>Type</th><th>Clinic / Account</th><th>Contact & Phone</th><th>Status</th><th>Spare Parts</th><th>Duration</th><th>Description</th></tr>
+            <tr>
+              <th>#</th>
+              <th id="col-assignee" style="display:none">Assignee</th>
+              <th>Type</th>
+              <th>Clinic / Account</th>
+              <th>Contact & Phone</th>
+              <th>Status</th>
+              <th>Spare Parts</th>
+              <th>Duration</th>
+              <th>Description</th>
+              <th id="col-actions" style="display:none">Actions</th>
+            </tr>
           </thead>
           <tbody id="tbody-mine"></tbody>
         </table>
@@ -266,33 +386,37 @@
 <div id="toast"></div>
 
 <script>
-const SCRIPT = "https://script.google.com/macros/s/AKfycbyd87MSxzZUXwhU6S4R2p-JHNtHew0aMvVYmN59FyRHbEV7wQYr0RvI4Fpyj887Y9N8/exec";
+const ENG_SCRIPT = "https://script.google.com/macros/s/AKfycbyd87MSxzZUXwhU6S4R2p-JHNtHew0aMvVYmN59FyRHbEV7wQYr0RvI4Fpyj887Y9N8/exec";
+const CLIENT_SCRIPT = "https://script.google.com/macros/s/AKfycbxa7Qaa0RB6A3cR6rjDqUD-5fj1aoKV1uPPNoX-z1pit5gMNM2bHPmvTOK_nNKUFplTmA/exec";
 
-const ENGINEERS = {
-  "Shakeel": { pin:"1122", color:"#4d9fff", isIT:true  },
-  "Sam":     { pin:"1112", color:"#00e5a0", isIT:false },
-  "Bernard": { pin:"1212", color:"#f0b429", isIT:false },
-  "Ghulam":  { pin:"2111", color:"#ff6b35", isIT:false },
-  "Ahmad":   { pin:"2211", color:"#a855f7", isIT:false }
+const USERS = {
+  "Mohamed Agha": { pin:"1243", color:"#ff4444", isManager:true, isIT:false },
+  "Shakeel":      { pin:"1122", color:"#4d9fff", isManager:false, isIT:true  },
+  "Sam":          { pin:"1112", color:"#00e5a0", isManager:false, isIT:false },
+  "Bernard":      { pin:"1212", color:"#f0b429", isManager:false, isIT:false },
+  "Ghulam":       { pin:"2111", color:"#ff6b35", isManager:false, isIT:false },
+  "Ahmad":        { pin:"2211", color:"#a855f7", isManager:false, isIT:false }
 };
 
+const ENG_LIST = ["Shakeel","Sam","Bernard","Ghulam","Ahmad"];
 const STATUS_OPTIONS = ["New","In Progress","Waiting","Closed"];
+const STATUS_MAP = {'New':'new','In Progress':'inprogress','Waiting':'waiting','Closed':'closed'};
+
 let MY_NAME="", allData=[], myTickets=[], newTickets=[];
 let selectedStatuses=['New','In Progress','Waiting','Closed'];
-let pinBuffer="", pendingStatusChange=null, selectedTicketStatus="In Progress";
+let currentFilter='all'; // for manager
+let pinBuffer="", pendingConfirm=null;
+let selectedTicketStatus="In Progress", selectedTicketType="hardware";
+let editingTimestamp=null;
+let chartInstance=null, currentChartType='ratio', currentTimePeriod='all';
 
 // ── PIN ──────────────────────────────────────────────────────
-function pinPress(digit){
+function pinPress(d){
   if(pinBuffer.length>=4)return;
-  pinBuffer+=digit;
-  updateDots();
+  pinBuffer+=d; updateDots();
   if(pinBuffer.length===4)setTimeout(checkPin,100);
 }
-function pinDelete(){
-  pinBuffer=pinBuffer.slice(0,-1);
-  updateDots();
-  document.getElementById('pin-error').innerText='';
-}
+function pinDelete(){pinBuffer=pinBuffer.slice(0,-1);updateDots();document.getElementById('pin-error').innerText='';}
 function updateDots(){
   for(let i=0;i<4;i++){
     const dot=document.getElementById('dot-'+i);
@@ -301,32 +425,40 @@ function updateDots(){
   }
 }
 function checkPin(){
-  const matched=Object.entries(ENGINEERS).find(([name,eng])=>eng.pin===pinBuffer);
+  const matched=Object.entries(USERS).find(([n,u])=>u.pin===pinBuffer);
   if(matched){
     MY_NAME=matched[0];
-    localStorage.setItem('eng_name',MY_NAME);
-    localStorage.setItem('eng_pin',pinBuffer);
+    localStorage.setItem('svc_name',MY_NAME);
+    localStorage.setItem('svc_pin',pinBuffer);
     unlockDashboard();
-  }else{
+  } else {
     for(let i=0;i<4;i++)document.getElementById('dot-'+i).classList.add('error');
     document.getElementById('pin-error').innerText='Wrong PIN. Try again.';
     setTimeout(()=>{pinBuffer='';updateDots();},800);
   }
 }
 function unlockDashboard(){
-  const eng=ENGINEERS[MY_NAME];
-  document.documentElement.style.setProperty('--accent',eng.color);
+  const u=USERS[MY_NAME];
+  document.documentElement.style.setProperty('--accent',u.color);
   document.getElementById('pin-screen').style.display='none';
   document.getElementById('main').style.display='block';
-  document.getElementById('eng-title').innerHTML=MY_NAME+' — <span>My Dashboard</span>';
-  if(eng.isIT) document.getElementById('new-tickets-section').style.display='none';
-  loadData(true);
+  document.getElementById('eng-title').innerHTML=MY_NAME+' — <span>Dashboard</span>';
+
+  if(u.isManager){
+    document.getElementById('eng-subtitle').innerText='Manager View';
+    document.getElementById('eng-cards').style.display='grid';
+    document.getElementById('chart-btn').style.display='block';
+    document.getElementById('table-title').innerText='📋 All Tickets';
+    document.getElementById('col-assignee').style.display='';
+    document.getElementById('col-actions').style.display='';
+  } else if(!u.isIT){
+    document.getElementById('new-tickets-section').style.display='block';
+  }
+  loadData();
 }
 function logout(){
-  localStorage.removeItem('eng_name');
-  localStorage.removeItem('eng_pin');
-  MY_NAME='';pinBuffer='';
-  updateDots();
+  localStorage.removeItem('svc_name');localStorage.removeItem('svc_pin');
+  MY_NAME='';pinBuffer='';updateDots();
   document.getElementById('pin-error').innerText='';
   document.getElementById('main').style.display='none';
   document.getElementById('content').style.display='none';
@@ -335,91 +467,28 @@ function logout(){
   document.documentElement.style.setProperty('--accent','#00e5a0');
 }
 window.onload=()=>{
-  const savedName=localStorage.getItem('eng_name');
-  const savedPin=localStorage.getItem('eng_pin');
-  if(savedName&&savedPin&&ENGINEERS[savedName]&&ENGINEERS[savedName].pin===savedPin){
-    MY_NAME=savedName;pinBuffer=savedPin;unlockDashboard();
-  }
+  const n=localStorage.getItem('svc_name'),p=localStorage.getItem('svc_pin');
+  if(n&&p&&USERS[n]&&USERS[n].pin===p){MY_NAME=n;pinBuffer=p;unlockDashboard();}
 };
 
+// ── TOAST ────────────────────────────────────────────────────
 function showToast(msg,color){
   const t=document.getElementById('toast');
   t.innerText=msg;t.style.background=color||'#00e5a0';
   t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);
 }
 
-function confirmYes(){
-  document.getElementById('confirm-overlay').classList.remove('show');
-  if(pendingStatusChange){pendingStatusChange();pendingStatusChange=null;}
-}
-function cancelConfirm(){
-  document.getElementById('confirm-overlay').classList.remove('show');
-  pendingStatusChange=null;
-  refreshUI();
-}
-function showConfirm(title,msg,callback){
+// ── CONFIRM ──────────────────────────────────────────────────
+function showConfirm(title,msg,cb){
   document.getElementById('confirm-title').innerText=title;
   document.getElementById('confirm-msg').innerText=msg;
-  pendingStatusChange=callback;
+  pendingConfirm=cb;
   document.getElementById('confirm-overlay').classList.add('show');
 }
+function confirmYes(){document.getElementById('confirm-overlay').classList.remove('show');if(pendingConfirm){pendingConfirm();pendingConfirm=null;}}
+function confirmNo(){document.getElementById('confirm-overlay').classList.remove('show');pendingConfirm=null;refreshUI();}
 
-function openModal(){
-  const isIT=ENGINEERS[MY_NAME]?.isIT;
-  document.getElementById('status-selector-group').style.display=isIT?'block':'none';
-  document.getElementById('modal-title').innerText=isIT?'+ Add IT Ticket':'+ Add Hardware Ticket';
-  selectedTicketStatus='In Progress';
-  ['inprogress','waiting','closed'].forEach(s=>document.getElementById('sopt-'+s).className='status-option');
-  document.getElementById('sopt-inprogress').className='status-option sel-inprogress';
-  document.getElementById('f-clinic').value='';
-  document.getElementById('f-phone').value='';
-  document.getElementById('f-device').value='';
-  document.getElementById('f-location').value='';
-  document.getElementById('f-desc').value='';
-  document.getElementById('modal').classList.add('show');
-}
-function closeModal(){document.getElementById('modal').classList.remove('show');}
-
-function selectTicketStatus(status){
-  selectedTicketStatus=status;
-  ['inprogress','waiting','closed'].forEach(s=>document.getElementById('sopt-'+s).className='status-option');
-  const map={'In Progress':'inprogress','Waiting':'waiting','Closed':'closed'};
-  document.getElementById('sopt-'+map[status]).className='status-option sel-'+map[status];
-}
-
-async function submitTicket(){
-  const clinic=document.getElementById('f-clinic').value.trim();
-  const phone=document.getElementById('f-phone').value.trim();
-  const device=document.getElementById('f-device').value.trim();
-  const location=document.getElementById('f-location').value.trim();
-  const desc=document.getElementById('f-desc').value.trim();
-  if(!clinic){showToast('⚠ Please enter clinic name!','#ff6b35');return;}
-  const btn=document.getElementById('submit-btn');
-  btn.disabled=true;btn.innerText='Adding...';
-  const isIT=ENGINEERS[MY_NAME]?.isIT;
-  const timestamp=new Date().toISOString();
-  const ticketType=isIT?'Computer / System (IT)':'Equipment / Dental Unit';
-  const status=isIT?selectedTicketStatus:'In Progress';
-  try{
-    await fetchJSONP(SCRIPT+
-      '?action=addRow'+
-      '&timestamp='+encodeURIComponent(timestamp)+
-      '&name='+encodeURIComponent(MY_NAME)+
-      '&clinic='+encodeURIComponent(clinic)+
-      '&phone='+encodeURIComponent(phone)+
-      '&device='+encodeURIComponent(device)+
-      '&location='+encodeURIComponent(location)+
-      '&description='+encodeURIComponent(desc)+
-      '&ticketType='+encodeURIComponent(ticketType)+
-      '&status='+encodeURIComponent(status)
-    );
-    closeModal();
-    showToast('✅ Ticket added!');
-    loadData(true);
-  }catch(e){showToast('⚠ Error adding ticket','#ff6b35');}
-  btn.disabled=false;btn.innerText='➕ Add Ticket';
-}
-
+// ── JSONP ────────────────────────────────────────────────────
 function fetchJSONP(url){
   return new Promise((resolve,reject)=>{
     const cbName='cb_'+Math.random().toString(36).substr(2,9);
@@ -427,28 +496,58 @@ function fetchJSONP(url){
     const timeout=setTimeout(()=>{try{document.body.removeChild(script);}catch(e){}delete window[cbName];reject(new Error('Timeout'));},15000);
     window[cbName]=(data)=>{clearTimeout(timeout);try{document.body.removeChild(script);}catch(e){}delete window[cbName];resolve(data);};
     script.onerror=()=>{clearTimeout(timeout);try{document.body.removeChild(script);}catch(e){}delete window[cbName];reject(new Error('Script error'));};
-    // CACHE BUSTER: Added &t= parameter
     script.src=url+(url.includes('?')?'&':'?')+'callback='+cbName+'&t='+Date.now();
     document.body.appendChild(script);
   });
 }
 
-async function loadData(forceRefresh = false){
+// ── LOAD DATA ────────────────────────────────────────────────
+async function loadData(){
   const btn=document.getElementById('rbtn');
   btn.style.opacity='0.5';btn.innerText='↻ Loading...';
   try{
-    const data=await fetchJSONP(SCRIPT);
-    allData=data
+    const u=USERS[MY_NAME];
+    let engData=[], clientData=[];
+
+    // Always load engineers sheet
+    engData=await fetchJSONP(ENG_SCRIPT);
+
+    // Load client sheet too (for unassigned tickets)
+    try{ clientData=await fetchJSONP(CLIENT_SCRIPT); }catch(e){}
+
+    // Merge: client tickets not in eng sheet appear as unassigned
+    const engTs=new Set(engData.filter(r=>r['Timestamp']).map(r=>new Date(r['Timestamp']).getTime()));
+    const unassignedFromClient=clientData
+      .filter(r=>r['Timestamp']&&!engTs.has(new Date(r['Timestamp']).getTime()))
+      .map(r=>({
+        'Timestamp': r['Timestamp'],
+        'Name': '',
+        'Current Status': 'New',
+        'Customer/Account Name': r['Clinic/Hospital Name / اسم العيادة/المستشفى']||r['Clinic/Hospital Name']||'',
+        'Problem Description': r['Description of the Technical Issue / وصف المشكلة التقنية']||r['Description of the Technical Issue']||'',
+        'Contact Person Name': r['Contact Person Name / اسم الشخص']||r['Contact Person Name']||'',
+        'Mobile Number': r['Mobile Number / رقم الجوال']||r['Mobile Number']||'',
+        'Device Model': r['Device Model / طراز الجهاز']||r['Device Model']||'',
+        'Equipment Serial Number': r['Serial Number / الرقم التسلسلي']||r['Equipment Serial Number']||'',
+        'Location': r['Location / الموقع']||r['Location']||'',
+        'Ticket Type': r['Type of problem / نوع المشكلة']||r['Type of problem']||'',
+        '_fromClient': true
+      }));
+
+    allData=[...engData,...unassignedFromClient]
       .filter(r=>r['Timestamp']&&r['Timestamp'].toString().trim()!=='')
       .sort((a,b)=>new Date(b['Timestamp'])-new Date(a['Timestamp']));
-    myTickets=allData.filter(r=>getVal(r,'Name')===MY_NAME);
+
+    myTickets=u.isManager ? allData : allData.filter(r=>getVal(r,'Name')===MY_NAME);
+
     newTickets=allData.filter(r=>{
       const name=getVal(r,'Name');
       const status=getStatus(r).toLowerCase();
       const type=getVal(r,'Ticket Type').toLowerCase();
-      const isIT=type.includes('it')||type.includes('computer')||type.includes('system');
+      const isIT=type.includes('computer')||type.includes('system')||type.includes('it)');
       return name===''&&status==='new'&&!isIT;
     });
+
     document.getElementById('loading').style.display='none';
     document.getElementById('content').style.display='block';
     refreshUI();
@@ -456,16 +555,46 @@ async function loadData(forceRefresh = false){
   btn.style.opacity='1';btn.innerText='↻ Refresh';
 }
 
-function refreshUI(){updateStats();renderNewTickets();renderMyTickets();}
-function getVal(obj,...keys){for(let key of keys){if(obj[key]!==undefined&&obj[key]!==null&&obj[key].toString().trim()!=='')return obj[key].toString().trim();}return "";}
+function refreshUI(){
+  if(USERS[MY_NAME]?.isManager) renderEngCards();
+  updateStats();
+  renderNewTickets();
+  renderMyTickets();
+}
+
+function getVal(obj,...keys){
+  for(let key of keys){if(obj[key]!==undefined&&obj[key]!==null&&obj[key].toString().trim()!=='')return obj[key].toString().trim();}
+  return "";
+}
 function getStatus(r){return getVal(r,'Current Status','Status')||'New';}
 function calculateDuration(start,end){
   const s=new Date(start),e=end?new Date(end):new Date();
   if(isNaN(s.getTime()))return '-';
-  const diffHrs=Math.floor((e-s)/(1000*60*60)),diffDays=Math.floor(diffHrs/24);
-  return diffDays>0?`${diffDays}d ${diffHrs%24}h`:`${diffHrs}h`;
+  const h=Math.floor((e-s)/3600000),d=Math.floor(h/24);
+  return d>0?`${d}d ${h%24}h`:`${h}h`;
 }
 
+// ── MANAGER: ENG CARDS ───────────────────────────────────────
+function renderEngCards(){
+  const grid=document.getElementById('eng-cards');
+  const cards=[{name:'all',color:'#ff4444',label:'All Team'},...ENG_LIST.map(n=>({name:n,color:USERS[n].color,label:n}))];
+  grid.innerHTML=cards.map(c=>{
+    const count=c.name==='all'?allData.length:allData.filter(r=>getVal(r,'Name')===c.name).length;
+    return `<div class="eng-card ${currentFilter===c.name?'active':''}" onclick="filterByEng('${c.name}')" style="border-bottom:3px solid ${c.color}">
+      <div class="eng-card-name" style="color:${c.color}">${c.label}</div>
+      <div style="font-size:11px;color:var(--muted)">${count} tickets</div>
+    </div>`;
+  }).join('');
+}
+
+function filterByEng(name){
+  currentFilter=name;
+  if(name==='all'){myTickets=allData;}
+  else{myTickets=allData.filter(r=>getVal(r,'Name')===name);}
+  refreshUI();
+}
+
+// ── STATS ────────────────────────────────────────────────────
 function updateStats(){
   const c={closed:0,open:0,inprogress:0,waiting:0};
   myTickets.forEach(r=>{
@@ -482,41 +611,62 @@ function updateStats(){
 }
 
 function toggleSlice(status){
-  const index=selectedStatuses.indexOf(status);
-  if(index>-1){selectedStatuses.splice(index,1);document.getElementById('btn-'+status).classList.remove('active-slice');}
+  const i=selectedStatuses.indexOf(status);
+  if(i>-1){selectedStatuses.splice(i,1);document.getElementById('btn-'+status).classList.remove('active-slice');}
   else{selectedStatuses.push(status);document.getElementById('btn-'+status).classList.add('active-slice');}
   renderMyTickets();
 }
 
+// ── CLAIM ────────────────────────────────────────────────────
 async function claimTicket(timestamp,btnEl){
   btnEl.disabled=true;btnEl.innerText='Claiming...';
   try{
-    const result=await fetchJSONP(SCRIPT+'?action=claim&timestamp='+encodeURIComponent(timestamp)+'&name='+encodeURIComponent(MY_NAME));
-    if(result.claimed){showToast('✅ Ticket claimed!');loadData(true);}
-    else{showToast('⚠ Already claimed by '+result.assignedTo,'#ff6b35');loadData(true);}
-  }catch(e){showToast('⚠ Error claiming','#ff6b35');btnEl.disabled=false;btnEl.innerText='⚡ Claim';}
+    const r=await fetchJSONP(ENG_SCRIPT+'?action=claim&timestamp='+encodeURIComponent(timestamp)+'&name='+encodeURIComponent(MY_NAME));
+    if(r.claimed){showToast('✅ Ticket claimed!');loadData();}
+    else{showToast('⚠ Already claimed by '+r.assignedTo,'#ff6b35');loadData();}
+  }catch(e){showToast('⚠ Error','#ff6b35');btnEl.disabled=false;btnEl.innerText='⚡ Claim';}
 }
 
+// ── ASSIGN (manager) ─────────────────────────────────────────
+async function assignTicket(realIdx,selectEl,btnEl){
+  const selected=selectEl.value;
+  if(!selected){showToast('⚠ Select an option!','#ff6b35');return;}
+  btnEl.disabled=true;btnEl.innerText='...';
+  const ticket=allData[realIdx];
+  const timestamp=getVal(ticket,'Timestamp');
+  if(selected==='UNASSIGN'){
+    showConfirm('Unassign Ticket','This will remove the ticket from the engineer.',async()=>{
+      try{
+        await fetchJSONP(ENG_SCRIPT+'?action=deleteRow&timestamp='+encodeURIComponent(timestamp));
+        showToast('↩ Ticket unassigned','#ff6b35');loadData();
+      }catch(e){showToast('⚠ Error','#ff6b35');}
+    });
+    btnEl.disabled=false;btnEl.innerText='✓';
+  } else {
+    try{
+      await fetchJSONP(ENG_SCRIPT+'?action=assign&timestamp='+encodeURIComponent(timestamp)+'&name='+encodeURIComponent(selected));
+      showToast('✅ Assigned to '+selected);loadData();
+    }catch(e){showToast('⚠ Error','#ff6b35');btnEl.disabled=false;btnEl.innerText='✓';}
+  }
+}
+
+// ── STATUS UPDATE ────────────────────────────────────────────
 function updateStatus(idx,newStatus,selectEl){
   const oldStatus=getStatus(myTickets[idx]);
-  showConfirm(
-    'Confirm Status Change',
-    `Change from "${oldStatus}" to "${newStatus==='Waiting'?'Waiting for Spare Parts':newStatus}"?`,
-    async()=>{
-      selectEl.disabled=true;
-      const ticket=myTickets[idx];
-      const timestamp=getVal(ticket,'Timestamp');
-      try{
-        await fetchJSONP(SCRIPT+'?action=updateStatus&timestamp='+encodeURIComponent(timestamp)+'&status='+encodeURIComponent(newStatus));
-        myTickets[idx]['Current Status']=newStatus;
-        if(newStatus!=='Waiting')myTickets[idx]['_spareParts']='';
-        showToast('✅ Status updated');
-        loadData(true);
-      }catch(e){showToast('⚠ Error updating','#ff6b35');loadData(true);}
-    }
-  );
+  showConfirm('Confirm Status Change',`Change from "${oldStatus}" to "${newStatus==='Waiting'?'Waiting for Spare Parts':newStatus}"?`,async()=>{
+    selectEl.disabled=true;
+    const ticket=myTickets[idx];
+    const timestamp=getVal(ticket,'Timestamp');
+    try{
+      await fetchJSONP(ENG_SCRIPT+'?action=updateStatus&timestamp='+encodeURIComponent(timestamp)+'&status='+encodeURIComponent(newStatus));
+      myTickets[idx]['Current Status']=newStatus;
+      if(newStatus!=='Waiting')myTickets[idx]['_spareParts']='';
+      showToast('✅ Status updated');loadData();
+    }catch(e){showToast('⚠ Error','#ff6b35');loadData();}
+  });
 }
 
+// ── SPARE PARTS ──────────────────────────────────────────────
 async function saveSpareParts(idx,inputEl,btnEl){
   const parts=inputEl.value.trim();
   if(!parts){showToast('⚠ Enter spare parts!','#ff6b35');return;}
@@ -524,92 +674,403 @@ async function saveSpareParts(idx,inputEl,btnEl){
   const ticket=myTickets[idx];
   const timestamp=getVal(ticket,'Timestamp');
   try{
-    await fetchJSONP(SCRIPT+'?action=updateStatus&timestamp='+encodeURIComponent(timestamp)+'&status=Waiting&spareParts='+encodeURIComponent(parts));
-    myTickets[idx]['_spareParts']=parts;
-    showToast('🔧 Spare parts saved!');
-    loadData(true);
-  }catch(e){showToast('⚠ Error saving','#ff6b35');loadData(true);}
+    await fetchJSONP(ENG_SCRIPT+'?action=updateStatus&timestamp='+encodeURIComponent(timestamp)+'&status=Waiting&spareParts='+encodeURIComponent(parts));
+    myTickets[idx]['_spareParts']=parts;showToast('🔧 Saved!');loadData();
+  }catch(e){showToast('⚠ Error','#ff6b35');loadData();}
 }
 
+// ── DELETE (manager) ─────────────────────────────────────────
+function deleteTicket(realIdx){
+  const ticket=allData[realIdx];
+  const timestamp=getVal(ticket,'Timestamp');
+  const clinic=getVal(ticket,'Customer/Account Name','Clinic/Hospital Name');
+  showConfirm('Delete Ticket',`Permanently delete ticket for "${clinic}"? This cannot be undone.`,async()=>{
+    try{
+      await fetchJSONP(ENG_SCRIPT+'?action=deleteRow&timestamp='+encodeURIComponent(timestamp));
+      showToast('🗑 Ticket deleted','#ff4444');loadData();
+    }catch(e){showToast('⚠ Error deleting','#ff6b35');}
+  });
+}
+
+// ── EDIT (manager) ───────────────────────────────────────────
+function editTicket(realIdx){
+  const ticket=allData[realIdx];
+  editingTimestamp=getVal(ticket,'Timestamp');
+  const status=getStatus(ticket);
+
+  document.getElementById('ticket-modal-title').innerText='✏️ Edit Ticket';
+  document.getElementById('ticket-submit-btn').innerText='💾 Save Changes';
+  document.getElementById('type-group').style.display='none';
+  document.getElementById('assign-group').style.display='none';
+  document.getElementById('status-group').style.display='block';
+
+  // Pre-fill
+  document.getElementById('f-clinic').value=getVal(ticket,'Customer/Account Name','Clinic/Hospital Name');
+  document.getElementById('f-phone').value=getVal(ticket,'Mobile Number');
+  document.getElementById('f-device').value=getVal(ticket,'Device Model');
+  document.getElementById('f-location').value=getVal(ticket,'Location');
+  document.getElementById('f-desc').value=getVal(ticket,'Problem Description','Description of the Technical Issue');
+  document.getElementById('f-spare').value=getVal(ticket,'What spare part is needed?');
+
+  selectStatus(status);
+  if(status==='Waiting')document.getElementById('spare-group').style.display='block';
+
+  document.getElementById('ticket-overlay').classList.add('show');
+}
+
+// ── ADD/EDIT MODAL ───────────────────────────────────────────
+function openTicketModal(){
+  editingTimestamp=null;
+  const u=USERS[MY_NAME];
+  document.getElementById('ticket-modal-title').innerText='+ Add Ticket';
+  document.getElementById('ticket-submit-btn').innerText='➕ Add Ticket';
+  document.getElementById('f-clinic').value='';
+  document.getElementById('f-phone').value='';
+  document.getElementById('f-device').value='';
+  document.getElementById('f-location').value='';
+  document.getElementById('f-desc').value='';
+  document.getElementById('f-spare').value='';
+  document.getElementById('spare-group').style.display='none';
+
+  if(u.isManager){
+    document.getElementById('type-group').style.display='block';
+    document.getElementById('assign-group').style.display='block';
+    document.getElementById('f-assign').value='';
+    selectedTicketType='hardware';
+    document.getElementById('topt-hw').className='type-opt sel-hw';
+    document.getElementById('topt-it').className='type-opt';
+    selectStatus('New');
+  } else {
+    document.getElementById('type-group').style.display='none';
+    document.getElementById('assign-group').style.display='none';
+    selectStatus('In Progress');
+  }
+
+  document.getElementById('ticket-overlay').classList.add('show');
+}
+function closeTicketModal(){document.getElementById('ticket-overlay').classList.remove('show');editingTimestamp=null;}
+
+function selectType(type){
+  selectedTicketType=type;
+  document.getElementById('topt-hw').className='type-opt'+(type==='hardware'?' sel-hw':'');
+  document.getElementById('topt-it').className='type-opt'+(type==='it'?' sel-it':'');
+  // Hide assign for IT
+  document.getElementById('assign-group').style.display=type==='it'?'none':'block';
+}
+
+function selectStatus(status){
+  selectedTicketStatus=status;
+  STATUS_OPTIONS.forEach(s=>{
+    const el=document.getElementById('sopt-'+s);
+    if(el) el.className='status-opt';
+  });
+  const el=document.getElementById('sopt-'+status);
+  if(el) el.className='status-opt sel-'+STATUS_MAP[status];
+  // Show spare parts input if Waiting
+  document.getElementById('spare-group').style.display=status==='Waiting'?'block':'none';
+}
+
+async function submitTicket(){
+  const clinic=document.getElementById('f-clinic').value.trim();
+  const desc=document.getElementById('f-desc').value.trim();
+  if(!clinic){showToast('⚠ Clinic name required!','#ff6b35');return;}
+
+  const btn=document.getElementById('ticket-submit-btn');
+  btn.disabled=true;btn.innerText='Saving...';
+
+  const phone=document.getElementById('f-phone').value.trim();
+  const device=document.getElementById('f-device').value.trim();
+  const location=document.getElementById('f-location').value.trim();
+  const spare=document.getElementById('f-spare').value.trim();
+  const u=USERS[MY_NAME];
+
+  try{
+    if(editingTimestamp){
+      // Edit existing
+      await fetchJSONP(ENG_SCRIPT+
+        '?action=editRow'+
+        '&timestamp='+encodeURIComponent(editingTimestamp)+
+        '&name='+encodeURIComponent(getVal(allData.find(r=>getVal(r,'Timestamp')===editingTimestamp)||{},'Name'))+
+        '&status='+encodeURIComponent(selectedTicketStatus)+
+        '&clinic='+encodeURIComponent(clinic)+
+        '&phone='+encodeURIComponent(phone)+
+        '&device='+encodeURIComponent(device)+
+        '&location='+encodeURIComponent(location)+
+        '&description='+encodeURIComponent(desc)+
+        '&spareParts='+encodeURIComponent(spare)
+      );
+      showToast('✅ Ticket updated!');
+    } else {
+      // Add new
+      const timestamp=new Date().toISOString();
+      let assignName='', ticketType='', status=selectedTicketStatus;
+
+      if(u.isManager){
+        const isIT=selectedTicketType==='it';
+        ticketType=isIT?'Computer / System (IT)':'Equipment / Dental Unit';
+        assignName=isIT?'Shakeel':(document.getElementById('f-assign').value||'');
+        if(!assignName) status='New';
+      } else {
+        ticketType=u.isIT?'Computer / System (IT)':'Equipment / Dental Unit';
+        assignName=MY_NAME;
+      }
+
+      await fetchJSONP(ENG_SCRIPT+
+        '?action=addRow'+
+        '&timestamp='+encodeURIComponent(timestamp)+
+        '&name='+encodeURIComponent(assignName)+
+        '&status='+encodeURIComponent(status)+
+        '&clinic='+encodeURIComponent(clinic)+
+        '&phone='+encodeURIComponent(phone)+
+        '&device='+encodeURIComponent(device)+
+        '&location='+encodeURIComponent(location)+
+        '&description='+encodeURIComponent(desc)+
+        '&ticketType='+encodeURIComponent(ticketType)+
+        '&spareParts='+encodeURIComponent(spare)
+      );
+      showToast('✅ Ticket added!');
+    }
+    closeTicketModal();
+    loadData();
+  }catch(e){showToast('⚠ Error saving ticket','#ff6b35');}
+  btn.disabled=false;btn.innerText=editingTimestamp?'💾 Save Changes':'➕ Add Ticket';
+}
+
+// ── RENDER NEW TICKETS ───────────────────────────────────────
 function renderNewTickets(){
   const tbody=document.getElementById('tbody-new');
   if(!tbody)return;
   if(newTickets.length===0){tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">No new unassigned tickets 🎉</td></tr>`;return;}
   tbody.innerHTML=newTickets.map((r,i)=>{
-    const timestamp=getVal(r,'Timestamp');
-    const clinicName=getVal(r,'Customer/Account Name','Clinic/Hospital Name','Clinic / Hospital Name');
-    const contactName=getVal(r,'Contact Person Name');
-    const phoneNum=getVal(r,'Mobile Number');
-    const location=getVal(r,'Location');
-    const description=getVal(r,'Problem Description','Description of the Technical Issue');
-    const contactCell=`<div class="client-info">
-      ${contactName?`<span class="cname">👤 ${contactName}</span>`:'<span style="color:var(--muted)">-</span>'}
-      ${phoneNum?`<a class="phone" href="tel:${phoneNum}">📞 ${phoneNum}</a>`:''}
-      ${location?`<span class="clocation">📍 ${location}</span>`:''}
-    </div>`;
+    const ts=getVal(r,'Timestamp');
+    const clinic=getVal(r,'Customer/Account Name','Clinic/Hospital Name');
+    const contact=getVal(r,'Contact Person Name');
+    const phone=getVal(r,'Mobile Number');
+    const loc=getVal(r,'Location');
+    const desc=getVal(r,'Problem Description','Description of the Technical Issue');
     return `<tr class="new-ticket-row">
       <td>${i+1}</td>
-      <td style="font-weight:600">${clinicName||'-'}</td>
-      <td>${contactCell}</td>
-      <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">${description||'-'}</td>
-      <td><button class="claim-btn" id="cbtn-${i}" onclick="claimTicket('${timestamp}',document.getElementById('cbtn-${i}'))">⚡ Claim</button></td>
+      <td style="font-weight:600">${clinic||'-'}</td>
+      <td><div class="client-info">
+        ${contact?`<span class="cname">👤 ${contact}</span>`:''}
+        ${phone?`<a class="phone" href="tel:${phone}">📞 ${phone}</a>`:''}
+        ${loc?`<span class="clocation">📍 ${loc}</span>`:''}
+      </div></td>
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">${desc||'-'}</td>
+      <td><button class="claim-btn" id="cbtn-${i}" onclick="claimTicket('${ts}',document.getElementById('cbtn-${i}'))">⚡ Claim</button></td>
     </tr>`;
   }).join('');
 }
 
+// ── RENDER MY TICKETS ────────────────────────────────────────
 function renderMyTickets(){
+  const isManager=USERS[MY_NAME]?.isManager;
   let tickets=myTickets.filter(r=>{
     const s=getStatus(r).toLowerCase();
-    return selectedStatuses.some(status=>{
-      if(status==='Waiting')return s.includes('waiting');
-      if(status==='New')return s==='new'||s==='';
-      if(status==='In Progress')return s.includes('in progress');
-      if(status==='Closed')return s.includes('closed');
+    return selectedStatuses.some(st=>{
+      if(st==='Waiting')return s.includes('waiting');
+      if(st==='New')return s==='new'||s==='';
+      if(st==='In Progress')return s.includes('in progress');
+      if(st==='Closed')return s.includes('closed');
       return false;
     });
   });
+
   const tbody=document.getElementById('tbody-mine');
-  if(tickets.length===0){tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">No tickets found</td></tr>`;return;}
-  const engColor=ENGINEERS[MY_NAME]?.color||'var(--accent)';
+  if(tickets.length===0){
+    const cols=isManager?10:8;
+    tbody.innerHTML=`<tr><td colspan="${cols}" style="text-align:center;color:var(--muted);padding:20px">No tickets found</td></tr>`;
+    return;
+  }
+
+  const engColor=USERS[MY_NAME]?.color||'var(--accent)';
+
   tbody.innerHTML=tickets.map((r,i)=>{
-    const idx=myTickets.indexOf(r);
+    const realIdx=allData.indexOf(r);
+    const myIdx=myTickets.indexOf(r);
+    const nameVal=getVal(r,'Name');
     const statusVal=getStatus(r);
-    const spareParts=r['_spareParts']||getVal(r,'What spare part is needed?');
     const isWaiting=statusVal.toLowerCase().includes('waiting');
+    const spareParts=r['_spareParts']||getVal(r,'What spare part is needed?');
     const ticketType=getVal(r,'Ticket Type');
-    const isIT=ticketType.toLowerCase().includes('it')||ticketType.toLowerCase().includes('computer')||ticketType.toLowerCase().includes('system');
-    const clinicName=getVal(r,'Customer/Account Name','Clinic/Hospital Name','Clinic / Hospital Name');
-    const contactName=getVal(r,'Contact Person Name');
-    const phoneNum=getVal(r,'Mobile Number');
-    const location=getVal(r,'Location');
-    const description=getVal(r,'Problem Description','Description of the Technical Issue');
+    const isIT=ticketType.toLowerCase().includes('computer')||ticketType.toLowerCase().includes('system')||ticketType.toLowerCase().includes('it)');
+    const clinic=getVal(r,'Customer/Account Name','Clinic/Hospital Name');
+    const contact=getVal(r,'Contact Person Name');
+    const phone=getVal(r,'Mobile Number');
+    const loc=getVal(r,'Location');
+    const desc=getVal(r,'Problem Description','Description of the Technical Issue');
+    const engCol=USERS[nameVal]?.color||'var(--text)';
+
     const typeBadge=ticketType?`<span class="type-badge ${isIT?'type-it':'type-hw'}">${isIT?'💻 IT':'🔧 HW'}</span>`:'-';
+
     const contactCell=`<div class="client-info">
-      ${contactName?`<span class="cname">👤 ${contactName}</span>`:'<span style="color:var(--muted)">-</span>'}
-      ${phoneNum?`<a class="phone" href="tel:${phoneNum}">📞 ${phoneNum}</a>`:''}
-      ${location?`<span class="clocation">📍 ${location}</span>`:''}
+      ${contact?`<span class="cname">👤 ${contact}</span>`:'<span style="color:var(--muted)">-</span>'}
+      ${phone?`<a class="phone" href="tel:${phone}">📞 ${phone}</a>`:''}
+      ${loc?`<span class="clocation">📍 ${loc}</span>`:''}
     </div>`;
-    const statusCell=`<select class="status-select" onchange="updateStatus(${idx},this.value,this)">
+
+    const statusCell=`<select class="status-select" onchange="updateStatus(${myIdx},this.value,this)">
       ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${statusVal===s?'selected':''}>${s==='Waiting'?'Waiting for Spare Parts':s}</option>`).join('')}
     </select>`;
+
     const spareCell=isWaiting
       ?`<div class="spare-wrap">
           ${spareParts?`<span class="spare-text">🔧 ${spareParts}</span>`:''}
-          <input class="spare-input" id="spare-${idx}" placeholder="Enter parts..." value="${spareParts}"/>
-          <button class="save-btn" id="sbtn-${idx}" onclick="saveSpareParts(${idx},document.getElementById('spare-${idx}'),document.getElementById('sbtn-${idx}'))">💾 Save</button>
+          <input class="spare-input" id="spare-${myIdx}" placeholder="Enter parts..." value="${spareParts}"/>
+          <button class="save-btn" id="sbtn-${myIdx}" onclick="saveSpareParts(${myIdx},document.getElementById('spare-${myIdx}'),document.getElementById('sbtn-${myIdx}'))">💾 Save</button>
         </div>`
       :`<span class="spare-text">${spareParts?'🔧 '+spareParts:'-'}</span>`;
+
+    // Manager assignee cell
+    let assigneeCell='';
+    if(isManager){
+      if(nameVal===''){
+        assigneeCell=`<div class="assign-wrap">
+          <select class="assign-select unassigned" id="asel-${realIdx}">
+            <option value="">⚠ Assign...</option>
+            ${ENG_LIST.map(n=>`<option value="${n}">${n}</option>`).join('')}
+          </select>
+          <button class="btn btn-small" style="background:var(--unassigned);color:#000" id="abtn-${realIdx}"
+            onclick="assignTicket(${realIdx},document.getElementById('asel-${realIdx}'),document.getElementById('abtn-${realIdx}'))">✓</button>
+        </div>`;
+      } else {
+        assigneeCell=`<div class="assign-wrap">
+          <span style="font-weight:700;color:${engCol}">${nameVal}</span>
+          <select class="assign-select" id="asel-${realIdx}">
+            <option value="">↺ Change...</option>
+            ${ENG_LIST.filter(n=>n!==nameVal).map(n=>`<option value="${n}">${n}</option>`).join('')}
+            <option value="UNASSIGN">⚠ Unassign</option>
+          </select>
+          <button class="btn btn-small btn-blue" id="abtn-${realIdx}"
+            onclick="assignTicket(${realIdx},document.getElementById('asel-${realIdx}'),document.getElementById('abtn-${realIdx}'))">✓</button>
+        </div>`;
+      }
+    }
+
+    const actionCell=isManager
+      ?`<div style="display:flex;gap:6px;">
+          <button class="btn btn-small btn-blue" onclick="editTicket(${realIdx})">✏️</button>
+          <button class="btn btn-small btn-red" onclick="deleteTicket(${realIdx})">🗑</button>
+        </div>`
+      :'';
+
     return `<tr>
       <td>${i+1}</td>
+      ${isManager?`<td>${assigneeCell}</td>`:''}
       <td>${typeBadge}</td>
-      <td style="font-weight:600">${clinicName||'-'}</td>
+      <td style="font-weight:600">${clinic||'-'}</td>
       <td>${contactCell}</td>
       <td>${statusCell}</td>
       <td>${spareCell}</td>
       <td><span style="color:${engColor}">${calculateDuration(getVal(r,'Timestamp'),getVal(r,'Closing Date'))}</span></td>
-      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">${description||'-'}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">${desc||'-'}</td>
+      ${isManager?`<td>${actionCell}</td>`:''}
     </tr>`;
   }).join('');
+}
+
+// ── CHARTS ──────────────────────────────────────────────────
+function openChart(){
+  document.getElementById('chart-overlay').classList.add('show');
+  renderChart();
+}
+function closeChart(){
+  document.getElementById('chart-overlay').classList.remove('show');
+  if(chartInstance){chartInstance.destroy();chartInstance=null;}
+}
+function setTimePeriod(p){
+  currentTimePeriod=p;
+  document.querySelectorAll('.time-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderChart();
+}
+function switchChart(type){
+  currentChartType=type;
+  document.querySelectorAll('.chart-tab').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  const titles={ratio:'Closed vs Open Ratio',perEngineer:'Tickets Per Engineer',status:'Status Breakdown',trend:'Trend Over Time'};
+  document.getElementById('chart-title').innerText=titles[type];
+  renderChart();
+}
+
+function getFilteredData(){
+  const now=new Date();
+  return allData.filter(r=>{
+    if(currentTimePeriod==='all')return true;
+    const ts=new Date(getVal(r,'Timestamp'));
+    if(isNaN(ts))return false;
+    const diffDays=(now-ts)/(1000*60*60*24);
+    return currentTimePeriod==='week'?diffDays<=7:diffDays<=30;
+  });
+}
+
+function renderChart(){
+  if(chartInstance){chartInstance.destroy();chartInstance=null;}
+  const ctx=document.getElementById('mainChart').getContext('2d');
+  const data=getFilteredData();
+  const chartDefaults={color:'#f0f2f7',borderColor:'#ffffff0f'};
+  Chart.defaults.color=chartDefaults.color;
+
+  if(currentChartType==='ratio'){
+    // Closed vs Open per engineer
+    const labels=ENG_LIST;
+    const closed=labels.map(n=>data.filter(r=>getVal(r,'Name')===n&&getStatus(r).toLowerCase().includes('closed')).length);
+    const open=labels.map(n=>data.filter(r=>getVal(r,'Name')===n&&!getStatus(r).toLowerCase().includes('closed')).length);
+    chartInstance=new Chart(ctx,{
+      type:'bar',
+      data:{labels,datasets:[
+        {label:'Closed',data:closed,backgroundColor:'#00e5a080',borderColor:'#00e5a0',borderWidth:2,borderRadius:6},
+        {label:'Open/Active',data:open,backgroundColor:'#4d9fff80',borderColor:'#4d9fff',borderWidth:2,borderRadius:6}
+      ]},
+      options:{responsive:true,plugins:{legend:{labels:{color:'#f0f2f7'}}},scales:{x:{ticks:{color:'#6b7280'},grid:{color:'#ffffff0f'}},y:{ticks:{color:'#6b7280'},grid:{color:'#ffffff0f'},beginAtZero:true}}}
+    });
+  } else if(currentChartType==='perEngineer'){
+    const labels=ENG_LIST;
+    const counts=labels.map(n=>data.filter(r=>getVal(r,'Name')===n).length);
+    const colors=labels.map(n=>USERS[n].color);
+    chartInstance=new Chart(ctx,{
+      type:'bar',
+      data:{labels,datasets:[{label:'Total Tickets',data:counts,backgroundColor:colors.map(c=>c+'80'),borderColor:colors,borderWidth:2,borderRadius:6}]},
+      options:{responsive:true,plugins:{legend:{labels:{color:'#f0f2f7'}}},scales:{x:{ticks:{color:'#6b7280'},grid:{color:'#ffffff0f'}},y:{ticks:{color:'#6b7280'},grid:{color:'#ffffff0f'},beginAtZero:true}}}
+    });
+  } else if(currentChartType==='status'){
+    const statuses=['New','In Progress','Waiting','Closed'];
+    const colors=['#4d9fff','#f0b429','#ff6b35','#00e5a0'];
+    const datasets=ENG_LIST.map(n=>({
+      label:n,
+      data:statuses.map(s=>{
+        const sl=s.toLowerCase();
+        return data.filter(r=>getVal(r,'Name')===n&&getStatus(r).toLowerCase().includes(sl==='new'?'new':sl==='in progress'?'in progress':sl==='waiting'?'waiting':'closed')).length;
+      }),
+      backgroundColor:USERS[n].color+'80',borderColor:USERS[n].color,borderWidth:2,borderRadius:4
+    }));
+    chartInstance=new Chart(ctx,{
+      type:'bar',
+      data:{labels:statuses,datasets},
+      options:{responsive:true,plugins:{legend:{labels:{color:'#f0f2f7'}}},scales:{x:{ticks:{color:'#6b7280'},grid:{color:'#ffffff0f'}},y:{ticks:{color:'#6b7280'},grid:{color:'#ffffff0f'},beginAtZero:true}}}
+    });
+  } else if(currentChartType==='trend'){
+    // Group by week
+    const sorted=[...data].sort((a,b)=>new Date(a['Timestamp'])-new Date(b['Timestamp']));
+    const weeks={};
+    sorted.forEach(r=>{
+      const d=new Date(getVal(r,'Timestamp'));
+      if(isNaN(d))return;
+      const week=`${d.getFullYear()}-W${Math.ceil((d.getDate())/7)}`;
+      if(!weeks[week])weeks[week]={closed:0,open:0};
+      if(getStatus(r).toLowerCase().includes('closed'))weeks[week].closed++;
+      else weeks[week].open++;
+    });
+    const labels=Object.keys(weeks);
+    chartInstance=new Chart(ctx,{
+      type:'line',
+      data:{labels,datasets:[
+        {label:'Closed',data:labels.map(w=>weeks[w].closed),borderColor:'#00e5a0',backgroundColor:'#00e5a020',fill:true,tension:0.4,pointBackgroundColor:'#00e5a0'},
+        {label:'Active',data:labels.map(w=>weeks[w].open),borderColor:'#4d9fff',backgroundColor:'#4d9fff20',fill:true,tension:0.4,pointBackgroundColor:'#4d9fff'}
+      ]},
+      options:{responsive:true,plugins:{legend:{labels:{color:'#f0f2f7'}}},scales:{x:{ticks:{color:'#6b7280'},grid:{color:'#ffffff0f'}},y:{ticks:{color:'#6b7280'},grid:{color:'#ffffff0f'},beginAtZero:true}}}
+    });
+  }
 }
 </script>
 </body>
