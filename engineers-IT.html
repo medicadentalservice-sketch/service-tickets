@@ -43,17 +43,15 @@
   th { padding:12px 16px; text-align:left; background:var(--surface2); color:var(--muted); text-transform:uppercase; font-size:10px; }
   td { padding:12px 16px; border-bottom:1px solid var(--border); }
 
-  /* MODAL & FORMS */
+  /* MODAL */
   .modal-overlay { display:none; position:fixed; inset:0; background:#000000bb; z-index:200; align-items:center; justify-content:center; padding:20px; }
   .modal-overlay.show { display:flex; }
   .modal { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:32px; width:100%; max-width:520px; }
   .form-group { margin-bottom:16px; }
   .form-group label { display:block; font-size:11px; color:var(--muted); text-transform:uppercase; margin-bottom:6px; }
   .form-group input, .form-group select, .form-group textarea { width:100%; background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-family:'DM Mono',monospace; outline:none; }
-  
   #spare-input-container { display:none; margin-top: 10px; padding: 10px; border-left: 2px solid var(--waiting); background: #ff6b350a; }
 
-  /* BUTTONS */
   .btn { border:none; border-radius:8px; padding:10px 20px; cursor:pointer; font-family:'Syne',sans-serif; font-weight:700; font-size:12px; }
   .add-btn { background:#4d9fff; color:#fff; }
   .refresh-btn { background:var(--accent); color:#000; }
@@ -95,14 +93,14 @@
       </select>
       <div id="spare-input-container">
         <label style="color:var(--waiting)">Specify Spare Parts Needed *</label>
-        <input type="text" id="f-spare" placeholder="e.g. Vacuum Pump, Sensor Cable">
+        <input type="text" id="f-spare" placeholder="e.g. Vacuum Pump">
       </div>
     </div>
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
       <div class="form-group"><label>Phone</label><input type="text" id="f-phone"></div>
       <div class="form-group"><label>Location</label><input type="text" id="f-location"></div>
     </div>
-    <div class="form-group"><label>Issue Description *</label><textarea id="f-desc" rows="3"></textarea></div>
+    <div class="form-group"><label>Description *</label><textarea id="f-desc" rows="3"></textarea></div>
     <div style="display:flex; gap:10px;">
       <button class="btn" style="flex:1; background:var(--surface2); color:var(--muted)" onclick="closeModal()">Cancel</button>
       <button class="btn add-btn" style="flex:2" onclick="submitTicket()" id="sub-btn">Create Ticket</button>
@@ -115,12 +113,12 @@
     <div class="logo-area"><h1 id="eng-title">My <span>Dashboard</span></h1></div>
     <div style="display:flex; gap:10px;">
       <button class="btn add-btn" onclick="openModal()">+ Add Ticket</button>
-      <button class="btn refresh-btn" onclick="loadData()">Refresh</button>
+      <button class="btn refresh-btn" onclick="loadData()" id="rbtn">Refresh</button>
       <button class="btn" style="background:transparent; border:1px solid var(--border); color:var(--muted)" onclick="location.reload()">Sign Out</button>
     </div>
   </header>
 
-  <div id="loading" style="text-align:center; padding:50px;"><p>Fetching records...</p></div>
+  <div id="loading" style="text-align:center; padding:50px;"><p id="loading-text">Fetching records...</p></div>
 
   <div id="content" style="display:none">
     <div class="stats-grid">
@@ -130,14 +128,14 @@
       <div class="stat-card active-slice" style="border-left:4px solid var(--closed)"><small>CLOSED</small><div class="stat-value" id="c-clo">0</div></div>
     </div>
 
-    <div class="table-section" id="new-tickets-section">
+    <div class="table-section">
       <div class="table-header" style="color:var(--unassigned)">⚡ Available New Tickets</div>
       <div class="table-scroll"><table><thead><tr><th>Clinic</th><th>Contact</th><th>Issue</th><th>Action</th></tr></thead><tbody id="tbody-new"></tbody></table></div>
     </div>
 
     <div class="table-section">
       <div class="table-header">📋 My Active Tickets</div>
-      <div class="table-scroll"><table><thead><tr><th>Clinic</th><th>Status</th><th>Spare Parts</th><th>Duration</th><th>Description</th></tr></thead><tbody id="tbody-mine"></tbody></table></div>
+      <div class="table-scroll"><table><thead><tr><th>Clinic</th><th>Status</th><th>Parts</th><th>Description</th></tr></thead><tbody id="tbody-mine"></tbody></table></div>
     </div>
   </div>
 </div>
@@ -179,10 +177,7 @@ function unlock(){
 
 function openModal(){ document.getElementById('modal').classList.add('show'); }
 function closeModal(){ document.getElementById('modal').classList.remove('show'); }
-
-function handleStatusChange(val){
-  document.getElementById('spare-input-container').style.display = (val === 'Waiting') ? 'block' : 'none';
-}
+function handleStatusChange(val){ document.getElementById('spare-input-container').style.display = (val === 'Waiting') ? 'block' : 'none'; }
 
 function showToast(m, c){
   const t = document.getElementById('toast');
@@ -190,25 +185,16 @@ function showToast(m, c){
   t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 3000);
 }
 
-async function submitTicket(){
-  const clinic = document.getElementById('f-clinic').value.trim();
-  const status = document.getElementById('f-status').value;
-  const spare = document.getElementById('f-spare').value.trim();
-  const desc = document.getElementById('f-desc').value.trim();
-
-  if(!clinic || !desc) return showToast("Clinic & Description required", "#ff6b35");
-  if(status === 'Waiting' && !spare) return showToast("Please name the spare parts", "#ff6b35");
-
-  const btn = document.getElementById('sub-btn');
-  btn.disabled = true; btn.innerText = "Saving...";
-
-  const type = ENGINEERS[MY_NAME].isIT ? 'Computer / System (IT)' : 'Equipment / Dental Unit';
-
+async function loadData(){
+  const rb = document.getElementById('rbtn');
+  rb.disabled = true; rb.innerText = "Loading...";
   try {
-    await fetchJSONP(SCRIPT + `?action=addRow&timestamp=${encodeURIComponent(new Date().toISOString())}&name=${encodeURIComponent(MY_NAME)}&clinic=${encodeURIComponent(clinic)}&phone=${encodeURIComponent(document.getElementById('f-phone').value)}&location=${encodeURIComponent(document.getElementById('f-location').value)}&description=${encodeURIComponent(desc)}&ticketType=${encodeURIComponent(type)}&status=${encodeURIComponent(status)}&spareParts=${encodeURIComponent(spare)}`);
-    closeModal(); showToast("Ticket Created!"); loadData();
-  } catch(e){ showToast("Error connecting", "#ff4444"); }
-  btn.disabled = false; btn.innerText = "Create Ticket";
+    const d = await fetchJSONP(SCRIPT);
+    // Spreadsheet headers are: Timestamp, Clinic/Hospital Name, Contact Person Name, Mobile Number, Device Model, Serial Number, Description of the Technical Issue, Location, Type of problem, Name (Engineer Name), Current Status
+    allData = d.filter(r => r.Timestamp);
+    render();
+  } catch(e){ showToast("Connection Error", "#ff4444"); }
+  rb.disabled = false; rb.innerText = "Refresh";
 }
 
 function fetchJSONP(url){
@@ -221,31 +207,30 @@ function fetchJSONP(url){
   });
 }
 
-async function loadData(){
-  document.getElementById('loading').style.display = 'block';
-  document.getElementById('content').style.display = 'none';
-  try {
-    const d = await fetchJSONP(SCRIPT);
-    allData = d.filter(r => r.Timestamp).sort((a,b) => new Date(b.Timestamp) - new Date(a.Timestamp));
-    render();
-  } catch(e){ showToast("Failed to load", "#ff4444"); }
-}
-
 function render(){
   document.getElementById('loading').style.display = 'none';
   document.getElementById('content').style.display = 'block';
 
-  const mine = allData.filter(r => r.Name === MY_NAME);
-  const available = allData.filter(r => !r.Name || r.Name === "");
+  // Filters using exact spreadsheet headers
+  const mine = allData.filter(r => String(r['Name'] || "").trim() === MY_NAME);
+  const available = allData.filter(r => !r['Name'] || String(r['Name']).trim() === "");
 
   document.getElementById('tbody-new').innerHTML = available.map(r => `
-    <tr><td>${r['Customer/Account Name']||'Unknown'}</td><td>${r['Mobile Number']||'-'}</td><td>${r['Problem Description']||'-'}</td>
-    <td><button class="btn claim-btn" onclick="claim('${r.Timestamp}')">Claim</button></td></tr>
+    <tr>
+      <td>${r['Clinic/Hospital Name'] || '-'}</td>
+      <td>${r['Contact Person Name'] || '-'}</td>
+      <td>${r['Description of the Technical Issue'] || '-'}</td>
+      <td><button class="btn claim-btn" onclick="claim('${r.Timestamp}')">Claim</button></td>
+    </tr>
   `).join('');
 
   document.getElementById('tbody-mine').innerHTML = mine.map(r => `
-    <tr><td>${r['Customer/Account Name']}</td><td>${r['Current Status']}</td><td style="color:var(--waiting)">${r['What spare part is needed?']||'-'}</td>
-    <td>-</td><td>${r['Problem Description']}</td></tr>
+    <tr>
+      <td>${r['Clinic/Hospital Name'] || '-'}</td>
+      <td>${r['Current Status'] || 'New'}</td>
+      <td style="color:var(--waiting)">${r['What spare part is needed?'] || '-'}</td>
+      <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${r['Description of the Technical Issue'] || '-'}</td>
+    </tr>
   `).join('');
 
   document.getElementById('c-new').innerText = available.length;
@@ -260,6 +245,23 @@ async function claim(ts){
     await fetchJSONP(SCRIPT + `?action=claim&timestamp=${encodeURIComponent(ts)}&name=${encodeURIComponent(MY_NAME)}`);
     loadData();
   } catch(e){ showToast("Claim failed", "#ff4444"); }
+}
+
+async function submitTicket(){
+  const clinic = document.getElementById('f-clinic').value.trim();
+  const status = document.getElementById('f-status').value;
+  const spare = document.getElementById('f-spare').value.trim();
+  const desc = document.getElementById('f-desc').value.trim();
+
+  if(!clinic || !desc) return showToast("Clinic & Description required", "#ff6b35");
+  const btn = document.getElementById('sub-btn');
+  btn.disabled = true; btn.innerText = "Saving...";
+
+  try {
+    await fetchJSONP(SCRIPT + `?action=addRow&timestamp=${encodeURIComponent(new Date().toISOString())}&name=${encodeURIComponent(MY_NAME)}&clinic=${encodeURIComponent(clinic)}&phone=${encodeURIComponent(document.getElementById('f-phone').value)}&location=${encodeURIComponent(document.getElementById('f-location').value)}&description=${encodeURIComponent(desc)}&status=${encodeURIComponent(status)}&spareParts=${encodeURIComponent(spare)}`);
+    closeModal(); showToast("Ticket Created!"); loadData();
+  } catch(e){ showToast("Error", "#ff4444"); }
+  btn.disabled = false; btn.innerText = "Create Ticket";
 }
 </script>
 </body>
