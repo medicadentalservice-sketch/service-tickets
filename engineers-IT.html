@@ -3,29 +3,47 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Service Tickets</title>
+<title>Medica — Service Tickets</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   :root {
-    --bg:#0D0B09;--surface:#1A1714;--surface2:#221E1A;
-    --border:#C9A96E20;--border2:#C9A96E40;
-    --gold:#C9A96E;--gold-light:#E8D5B0;--gold-dark:#A8834A;--gold-glow:#C9A96E10;
-    --text:#F5EDD8;--text2:#C9B99A;--muted:#8A7A6A;
-    --closed:#C9A96E;--open:#D4C4A0;--inprogress:#E8C47A;--waiting:#C4956A;
-    --unassigned:#E8A0C0;--danger:#C4604A;
+    --bg:#0D0B09;
+    --surface:#1A1714;
+    --surface2:#221E1A;
+    --border:#C9A96E20;
+    --border2:#C9A96E45;
+    --gold:#C9A96E;
+    --gold-light:#E8D5B0;
+    --gold-glow:#C9A96E12;
+    --text:#F5EDD8;
+    --text2:#C9B99A;
+    --muted:#8A7A6A;
+
+    /* STATUS COLORS — high contrast, clearly different */
+    --status-new:#5BA3D9;        /* clear blue */
+    --status-inprogress:#E8C84A; /* bright amber */
+    --status-waiting:#E87A3A;    /* vivid orange */
+    --status-closed:#5DBF8A;     /* clear green */
+    --status-unassigned:#D96B9E; /* pink/rose */
+
+    /* ENGINEER COLORS — maximally distinct */
+    --eng-shakeel:#5BA3D9;   /* blue */
+    --eng-sam:#C9A96E;       /* brand gold */
+    --eng-bernard:#E87A3A;   /* orange */
+    --eng-ghulam:#5DBF8A;    /* green */
+    --eng-ahmad:#A97AD9;     /* purple */
+
+    --danger:#D95B5B;
   }
+
   *{margin:0;padding:0;box-sizing:border-box;}
   body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-weight:300;}
-  body::before{content:'';position:fixed;inset:0;
-    background:radial-gradient(ellipse at 15% 40%,#C9A96E08 0%,transparent 55%),
-               radial-gradient(ellipse at 85% 10%,#C9A96E05 0%,transparent 45%);
-    pointer-events:none;z-index:0;}
-  .container{position:relative;z-index:1;max-width:1600px;margin:0 auto;padding:32px 24px;}
 
-  /* PIN */
+  /* PIN SCREEN */
   #pin-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:32px;position:fixed;inset:0;z-index:100;background:var(--bg);}
-  .pin-logo img{height:52px;width:auto;mix-blend-mode:screen;opacity:0.95;}
+  .pin-logo img{height:54px;width:auto;mix-blend-mode:screen;opacity:0.95;display:block;}
+  .pin-logo-text{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:400;color:var(--gold);letter-spacing:2px;display:none;}
   .pin-tagline{font-size:9px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;text-align:center;margin-top:6px;}
   .pin-label{font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--text2);font-style:italic;letter-spacing:1px;}
   .pin-dots{display:flex;gap:16px;}
@@ -34,16 +52,20 @@
   .pin-dot.error{background:var(--danger);border-color:var(--danger);animation:shake .3s ease;}
   @keyframes shake{0%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}100%{transform:translateX(0)}}
   .pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
-  .pin-key{width:66px;height:66px;border-radius:50%;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;-webkit-appearance:none;}
+  .pin-key{width:66px;height:66px;border-radius:50%;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;-webkit-appearance:none;appearance:none;}
   .pin-key:hover{background:var(--surface2);border-color:var(--gold);color:var(--gold);}
   .pin-key:active{transform:scale(0.95);}
   .pin-key.del{font-size:14px;color:var(--muted);}
   .pin-key.zero{grid-column:2;}
   .pin-error{color:var(--danger);font-size:11px;height:16px;text-align:center;letter-spacing:1px;}
 
+  /* LAYOUT */
+  .container{max-width:1600px;margin:0 auto;padding:28px 24px;}
+
   /* HEADER */
-  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:16px;border-bottom:1px solid var(--border);padding-bottom:20px;}
-  .header-logo img{height:44px;width:auto;mix-blend-mode:screen;opacity:0.93;}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:14px;border-bottom:1px solid var(--border);padding-bottom:18px;}
+  .header-logo img{height:42px;width:auto;mix-blend-mode:screen;opacity:0.93;display:block;}
+  .header-logo-text{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:400;color:var(--gold);letter-spacing:2px;display:none;}
   .logo-tagline{font-size:9px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-top:4px;}
   .header-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
   .user-badge{font-family:'Cormorant Garamond',serif;font-size:12px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;border:1px solid var(--border2);padding:6px 14px;}
@@ -61,26 +83,37 @@
 
   /* VIEW TOGGLE */
   .view-toggle{display:flex;border:1px solid var(--border2);overflow:hidden;}
-  .view-btn{padding:8px 18px;cursor:pointer;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;border:none;background:transparent;color:var(--muted);-webkit-appearance:none;}
+  .view-btn{padding:8px 18px;cursor:pointer;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;border:none;background:transparent;color:var(--muted);-webkit-appearance:none;appearance:none;}
   .view-btn.active{background:var(--gold);color:#0D0B09;}
 
   /* ENG CARDS */
-  .eng-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:28px;}
+  .eng-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:24px;}
   .eng-card{background:var(--surface);border:1px solid var(--border);padding:14px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
   .eng-card.active{background:var(--surface2);border-color:var(--border2);}
-  .eng-card-bar{position:absolute;bottom:0;left:0;right:0;height:2px;}
-  .eng-card-name{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:500;margin-bottom:4px;}
+  .eng-card-bar{position:absolute;bottom:0;left:0;right:0;height:3px;}
+  .eng-card-name{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:500;margin-bottom:4px;color:var(--text2);}
   .eng-card.active .eng-card-name{color:var(--gold);}
+  .eng-card-count{font-size:10px;color:var(--muted);font-family:'Cormorant Garamond',serif;font-style:italic;}
 
-  /* STATS */
-  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+  /* STATS — each status has its own clear color */
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
   @media(max-width:600px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
-  .stat-card{background:var(--surface);border:1px solid var(--border2);padding:20px 18px;position:relative;cursor:pointer;transition:all .2s;opacity:0.55;}
-  .stat-card.active-slice{opacity:1;}
-  .stat-card-top{position:absolute;top:0;left:0;right:0;height:2px;background:var(--gold);}
+  .stat-card{background:var(--surface);border:1px solid var(--border);padding:20px 18px;position:relative;cursor:pointer;transition:all .2s;opacity:0.5;border-left:3px solid transparent;}
+  .stat-card.active-slice{opacity:1;background:var(--surface2);}
+  .stat-card.s-new{border-left-color:var(--status-new);}
+  .stat-card.s-new.active-slice{border-color:var(--status-new);}
+  .stat-card.s-inprogress{border-left-color:var(--status-inprogress);}
+  .stat-card.s-inprogress.active-slice{border-color:var(--status-inprogress);}
+  .stat-card.s-waiting{border-left-color:var(--status-waiting);}
+  .stat-card.s-waiting.active-slice{border-color:var(--status-waiting);}
+  .stat-card.s-closed{border-left-color:var(--status-closed);}
+  .stat-card.s-closed.active-slice{border-color:var(--status-closed);}
   .stat-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
-  .stat-value{font-family:'Cormorant Garamond',serif;font-size:50px;font-weight:300;line-height:1;margin-top:6px;color:var(--gold-light);}
-  .stat-card.active-slice .stat-value{color:var(--gold);}
+  .stat-value{font-family:'Cormorant Garamond',serif;font-size:50px;font-weight:300;line-height:1;margin-top:6px;}
+  .stat-card.s-new .stat-value{color:var(--status-new);}
+  .stat-card.s-inprogress .stat-value{color:var(--status-inprogress);}
+  .stat-card.s-waiting .stat-value{color:var(--status-waiting);}
+  .stat-card.s-closed .stat-value{color:var(--status-closed);}
 
   /* SECTION */
   .section-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px;}
@@ -88,11 +121,11 @@
   .divider{height:1px;background:linear-gradient(90deg,var(--gold)50,transparent);margin-bottom:18px;}
 
   /* TABLES */
-  .table-section{background:var(--surface);border:1px solid var(--border);overflow:hidden;margin-bottom:22px;}
+  .table-section{background:var(--surface);border:1px solid var(--border);overflow:hidden;margin-bottom:20px;}
   .table-header{padding:14px 20px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
   .table-header-title{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500;color:var(--gold);letter-spacing:1px;}
 
-  /* SEARCH/FILTER BAR */
+  /* FILTER BAR */
   .filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 20px;background:var(--surface2);border-bottom:1px solid var(--border);}
   .filter-search{background:var(--surface);color:var(--text);border:1px solid var(--border2);padding:6px 12px;font-family:'Jost',sans-serif;font-size:11px;outline:none;width:200px;-webkit-appearance:none;letter-spacing:0.5px;}
   .filter-search::placeholder{color:var(--muted);}
@@ -104,7 +137,6 @@
   .tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
   table{width:100%;border-collapse:collapse;font-size:12px;min-width:1100px;}
 
-  /* SORTABLE COLUMN HEADERS */
   th{padding:11px 16px;text-align:left;background:var(--surface2);color:var(--muted);text-transform:uppercase;font-size:9px;letter-spacing:2px;font-weight:400;white-space:nowrap;border-bottom:1px solid var(--border);user-select:none;-webkit-user-select:none;}
   th.sortable{cursor:pointer;transition:color .2s;}
   th.sortable:hover{color:var(--gold);}
@@ -116,32 +148,40 @@
   tr:last-child td{border-bottom:none;}
   tr:hover td{background:var(--gold-glow);}
 
-  /* CREATION DATE COLUMN */
-  .creation-date{display:flex;flex-direction:column;gap:2px;}
-  .creation-date .cdate{font-family:'Cormorant Garamond',serif;font-size:13px;color:var(--text2);}
-  .creation-date .ctime{font-size:10px;color:var(--muted);letter-spacing:0.5px;}
+  /* STATUS BADGES in table */
+  .status-badge{display:inline-block;padding:3px 10px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border:1px solid;}
+  .sb-new{color:var(--status-new);border-color:var(--status-new)40;background:var(--status-new)12;}
+  .sb-inprogress{color:var(--status-inprogress);border-color:var(--status-inprogress)40;background:var(--status-inprogress)12;}
+  .sb-waiting{color:var(--status-waiting);border-color:var(--status-waiting)40;background:var(--status-waiting)12;}
+  .sb-closed{color:var(--status-closed);border-color:var(--status-closed)40;background:var(--status-closed)12;}
 
   .status-select{background:var(--surface2);color:var(--text2);border:1px solid var(--border);padding:5px 8px;font-family:'Jost',sans-serif;font-size:11px;cursor:pointer;outline:none;width:100%;-webkit-appearance:auto;appearance:auto;}
   .spare-wrap{display:flex;flex-direction:column;gap:3px;}
-  .spare-input{background:var(--surface2);color:var(--text);border:1px solid var(--waiting);padding:4px 8px;font-family:'Jost',sans-serif;font-size:11px;outline:none;width:130px;-webkit-appearance:none;}
+  .spare-input{background:var(--surface2);color:var(--text);border:1px solid var(--status-waiting);padding:4px 8px;font-family:'Jost',sans-serif;font-size:11px;outline:none;width:130px;-webkit-appearance:none;}
   .spare-input::placeholder{color:var(--muted);}
-  .save-btn{background:transparent;color:var(--waiting);border:1px solid var(--waiting);padding:3px 10px;font-size:10px;letter-spacing:1px;cursor:pointer;width:fit-content;font-family:'Jost',sans-serif;-webkit-appearance:none;}
-  .spare-text{color:var(--waiting);font-size:11px;}
-  .claim-btn{background:transparent;color:var(--unassigned);border:1px solid var(--unassigned);padding:5px 14px;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;-webkit-appearance:none;}
+  .save-btn{background:transparent;color:var(--status-waiting);border:1px solid var(--status-waiting);padding:3px 10px;font-size:10px;letter-spacing:1px;cursor:pointer;width:fit-content;font-family:'Jost',sans-serif;-webkit-appearance:none;}
+  .spare-text{color:var(--status-waiting);font-size:11px;}
+  .claim-btn{background:transparent;color:var(--status-unassigned);border:1px solid var(--status-unassigned);padding:5px 14px;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;-webkit-appearance:none;}
   .claim-btn:disabled{opacity:0.3;cursor:not-allowed;}
   .client-info{display:flex;flex-direction:column;gap:3px;}
   .client-info .cname{font-weight:400;font-size:12px;color:var(--text);}
   .client-info .phone{color:var(--gold);font-size:11px;text-decoration:none;}
   .client-info .clocation{color:var(--muted);font-size:10px;}
-  .new-ticket-row td{background:#E8A0C005;}
+  .new-ticket-row td{background:#D96B9E08;}
   .type-badge{display:inline-block;padding:2px 10px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;}
-  .type-it{background:transparent;color:#D4C4A0;border:1px solid #D4C4A030;}
-  .type-hw{background:transparent;color:var(--gold);border:1px solid var(--border2);}
+  .type-it{color:var(--status-new);border:1px solid var(--status-new)40;background:var(--status-new)10;}
+  .type-hw{color:var(--gold);border:1px solid var(--border2);}
   .assign-wrap{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
   .assign-select{background:var(--surface2);color:var(--text2);border:1px solid var(--border);padding:4px 6px;font-family:'Jost',sans-serif;font-size:10px;cursor:pointer;outline:none;max-width:105px;-webkit-appearance:auto;appearance:auto;}
-  .assign-select.unassigned{border-color:var(--unassigned);color:var(--unassigned);}
-  .avail-head{padding:12px 20px;background:#E8A0C008;border-bottom:1px solid #E8A0C020;display:flex;align-items:center;justify-content:space-between;}
-  .avail-title{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500;color:var(--unassigned);letter-spacing:1px;}
+  .assign-select.unassigned{border-color:var(--status-unassigned);color:var(--status-unassigned);}
+  .creation-date{display:flex;flex-direction:column;gap:2px;}
+  .creation-date .cdate{font-family:'Cormorant Garamond',serif;font-size:13px;color:var(--text2);}
+  .creation-date .ctime{font-size:10px;color:var(--muted);}
+
+  /* AVAILABLE TICKETS */
+  .avail-section{background:var(--surface);border:1px solid var(--status-unassigned)30;overflow:hidden;margin-bottom:20px;}
+  .avail-head{padding:12px 20px;background:var(--status-unassigned)08;border-bottom:1px solid var(--status-unassigned)20;display:flex;align-items:center;justify-content:space-between;}
+  .avail-title{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500;color:var(--status-unassigned);letter-spacing:1px;}
 
   /* LOADING */
   #loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:20px;}
@@ -169,35 +209,54 @@
   .form-group textarea{resize:vertical;min-height:70px;line-height:1.6;}
   .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   .dialog-btns{display:flex;gap:10px;margin-top:22px;justify-content:flex-end;}
+
   .status-selector{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:6px;}
   .status-opt{background:var(--surface2);border:1px solid var(--border);padding:9px 4px;cursor:pointer;text-align:center;transition:all .2s;font-family:'Jost',sans-serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);}
-  .status-opt:hover{border-color:var(--gold);color:var(--gold);}
-  .status-opt.sel-new{border-color:var(--open);color:var(--open);}
-  .status-opt.sel-inprogress{border-color:var(--inprogress);color:var(--inprogress);}
-  .status-opt.sel-waiting{border-color:var(--waiting);color:var(--waiting);}
-  .status-opt.sel-closed{border-color:var(--gold);color:var(--gold);}
+  .status-opt.sel-new{border-color:var(--status-new);color:var(--status-new);background:var(--status-new)12;}
+  .status-opt.sel-inprogress{border-color:var(--status-inprogress);color:var(--status-inprogress);background:var(--status-inprogress)12;}
+  .status-opt.sel-waiting{border-color:var(--status-waiting);color:var(--status-waiting);background:var(--status-waiting)12;}
+  .status-opt.sel-closed{border-color:var(--status-closed);color:var(--status-closed);background:var(--status-closed)12;}
+
   .type-selector{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;}
   .type-opt{background:var(--surface2);border:1px solid var(--border);padding:16px 10px;cursor:pointer;text-align:center;transition:all .2s;}
   .type-opt:hover{border-color:var(--gold);}
-  .type-opt.sel-hw{border-color:var(--gold);}
-  .type-opt.sel-it{border-color:var(--open);}
+  .type-opt.sel-hw{border-color:var(--gold);background:var(--gold)08;}
+  .type-opt.sel-it{border-color:var(--status-new);background:var(--status-new)08;}
   .type-opt .ticon{font-size:20px;margin-bottom:6px;}
   .type-opt .tlabel{font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:500;color:var(--text2);}
   .type-opt .tsub{font-size:10px;color:var(--muted);margin-top:3px;}
 
-  /* ANALYSIS */
+  /* ── ANALYSIS VIEW ── */
   #analysis-view{display:none;}
   .time-toggle{display:flex;gap:7px;margin-bottom:20px;flex-wrap:wrap;}
   .time-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:7px 16px;cursor:pointer;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;-webkit-appearance:none;}
   .time-btn.active{background:var(--gold);color:#0D0B09;border-color:var(--gold);}
-  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
-  .kpi-card{background:var(--surface);border:1px solid var(--border);padding:18px;text-align:center;}
-  .kpi-value{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:300;color:var(--gold);margin-bottom:5px;}
+
+  /* KPI cards — each status color */
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
+  .kpi-card{background:var(--surface);border:1px solid var(--border);padding:18px;text-align:center;border-top:2px solid var(--gold);}
+  .kpi-card.kpi-total{border-top-color:var(--gold);}
+  .kpi-card.kpi-closed{border-top-color:var(--status-closed);}
+  .kpi-card.kpi-inprog{border-top-color:var(--status-inprogress);}
+  .kpi-card.kpi-waiting{border-top-color:var(--status-waiting);}
+  .kpi-card.kpi-rate{border-top-color:var(--gold);}
+  .kpi-value{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:300;margin-bottom:5px;}
+  .kpi-card.kpi-total .kpi-value{color:var(--gold);}
+  .kpi-card.kpi-closed .kpi-value{color:var(--status-closed);}
+  .kpi-card.kpi-inprog .kpi-value{color:var(--status-inprogress);}
+  .kpi-card.kpi-waiting .kpi-value{color:var(--status-waiting);}
+  .kpi-card.kpi-rate .kpi-value{color:var(--gold);}
   .kpi-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;}
+
   .analysis-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
   @media(max-width:900px){.analysis-grid{grid-template-columns:1fr;}}
   .chart-card{background:var(--surface);border:1px solid var(--border);padding:22px;}
   .chart-card-title{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:500;margin-bottom:18px;color:var(--gold-light);letter-spacing:1px;}
+
+  /* Legend dots for chart clarity */
+  .chart-legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;}
+  .legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);}
+  .legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -206,8 +265,12 @@
 <div id="pin-screen">
   <div style="text-align:center;">
     <div class="pin-logo">
-      <img src="https://medicadentalservice-sketch.github.io/service-tickets/IMG_8714.jpeg" alt="Medica" onerror="this.style.display='none';document.getElementById('pin-logo-fallback').style.display='block'"/>
-      <div id="pin-logo-fallback" style="display:none;font-family:'Cormorant Garamond',serif;font-size:36px;color:var(--gold);letter-spacing:2px;">Medica</div>
+      <img
+        src="https://medicadentalservice-sketch.github.io/service-tickets/IMG_8714.jpeg"
+        alt="Medica"
+        onerror="this.style.display='none';document.getElementById('pin-logo-fb').style.display='block';"
+      />
+      <div id="pin-logo-fb" class="pin-logo-text">Medica</div>
     </div>
     <div class="pin-tagline">Service Portal</div>
   </div>
@@ -309,8 +372,12 @@
   <header>
     <div>
       <div class="header-logo">
-        <img src="https://medicadentalservice-sketch.github.io/service-tickets/IMG_8714.jpeg" alt="Medica" onerror="this.style.display='none';document.getElementById('hdr-logo-fallback').style.display='block'"/>
-        <div id="hdr-logo-fallback" style="display:none;font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--gold);letter-spacing:2px;">Medica</div>
+        <img
+          src="https://medicadentalservice-sketch.github.io/service-tickets/IMG_8714.jpeg"
+          alt="Medica"
+          onerror="this.style.display='none';document.getElementById('hdr-logo-fb').style.display='block';"
+        />
+        <div id="hdr-logo-fb" class="header-logo-text">Medica</div>
       </div>
       <div class="logo-tagline" id="eng-subtitle">Service Portal</div>
     </div>
@@ -322,39 +389,41 @@
     </div>
   </header>
 
-  <div id="loading"><div class="spinner"></div><div style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--muted);letter-spacing:2px;">Loading tickets...</div></div>
+  <div id="loading">
+    <div class="spinner"></div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--muted);letter-spacing:2px;">Loading tickets...</div>
+  </div>
 
   <div id="content">
+
+    <!-- Engineer filter cards (manager) -->
     <div class="eng-cards" id="eng-cards" style="display:none"></div>
 
+    <!-- Stats — each with its own status color -->
     <div class="stats-grid">
-      <div class="stat-card active-slice" id="btn-New" onclick="toggleSlice('New')">
-        <div class="stat-card-top"></div>
+      <div class="stat-card s-new active-slice" id="btn-New" onclick="toggleSlice('New')">
         <div class="stat-label">New</div>
         <div class="stat-value" id="count-open">0</div>
       </div>
-      <div class="stat-card active-slice" id="btn-In Progress" onclick="toggleSlice('In Progress')">
-        <div class="stat-card-top"></div>
+      <div class="stat-card s-inprogress active-slice" id="btn-In Progress" onclick="toggleSlice('In Progress')">
         <div class="stat-label">In Progress</div>
         <div class="stat-value" id="count-inprogress">0</div>
       </div>
-      <div class="stat-card active-slice" id="btn-Waiting" onclick="toggleSlice('Waiting')">
-        <div class="stat-card-top"></div>
+      <div class="stat-card s-waiting active-slice" id="btn-Waiting" onclick="toggleSlice('Waiting')">
         <div class="stat-label">Waiting Parts</div>
         <div class="stat-value" id="count-waiting">0</div>
       </div>
-      <div class="stat-card active-slice" id="btn-Closed" onclick="toggleSlice('Closed')">
-        <div class="stat-card-top"></div>
+      <div class="stat-card s-closed active-slice" id="btn-Closed" onclick="toggleSlice('Closed')">
         <div class="stat-label">Closed</div>
         <div class="stat-value" id="count-closed">0</div>
       </div>
     </div>
 
-    <!-- Available tickets (hardware engineers only) -->
-    <div class="table-section" id="new-tickets-section" style="display:none">
+    <!-- Available tickets -->
+    <div class="avail-section" id="new-tickets-section" style="display:none">
       <div class="avail-head">
         <span class="avail-title">Available Tickets</span>
-        <span style="font-size:9px;color:var(--unassigned);letter-spacing:2px;text-transform:uppercase;">Tap to claim</span>
+        <span style="font-size:9px;color:var(--status-unassigned);letter-spacing:2px;text-transform:uppercase;">Tap to claim</span>
       </div>
       <div class="tscroll">
         <table>
@@ -364,7 +433,7 @@
       </div>
     </div>
 
-    <!-- View toggle (manager only) -->
+    <!-- View toggle (manager) -->
     <div id="view-toggle-section" style="display:none">
       <div class="section-row">
         <div class="section-title" id="section-title">All Tickets</div>
@@ -382,15 +451,13 @@
         <div class="table-header">
           <span class="table-header-title" id="table-title">My Assigned Tickets</span>
         </div>
-
-        <!-- FILTER BAR -->
         <div class="filter-bar">
           <input class="filter-search" type="text" id="search-input" placeholder="Search clinic, contact, description..." oninput="applyFilters()"/>
           <select class="filter-select" id="filter-status" onchange="applyFilters()">
             <option value="">All Statuses</option>
             <option value="New">New</option>
             <option value="In Progress">In Progress</option>
-            <option value="Waiting">Waiting for Spare Parts</option>
+            <option value="Waiting">Waiting</option>
             <option value="Closed">Closed</option>
           </select>
           <select class="filter-select" id="filter-type" onchange="applyFilters()">
@@ -409,9 +476,8 @@
           <button class="filter-clear" onclick="clearFilters()">Clear</button>
           <span class="filter-count" id="filter-count"></span>
         </div>
-
         <div class="tscroll">
-          <table id="main-table">
+          <table>
             <thead>
               <tr>
                 <th class="sortable" onclick="sortTable('index')" id="th-index">#</th>
@@ -440,59 +506,96 @@
         <button class="time-btn" onclick="setTimePeriod('month',this)">This Month</button>
         <button class="time-btn" onclick="setTimePeriod('all',this)">All Time</button>
       </div>
+
+      <!-- KPI Cards — distinct colors per status -->
       <div class="kpi-grid" id="kpi-grid"></div>
+
       <div class="analysis-grid">
-        <div class="chart-card"><div class="chart-card-title">Closed vs Active — By Engineer</div><canvas id="chart-ratio" height="260"></canvas></div>
-        <div class="chart-card"><div class="chart-card-title">Ticket Distribution</div><canvas id="chart-per-eng" height="260"></canvas></div>
-        <div class="chart-card"><div class="chart-card-title">Status Breakdown</div><canvas id="chart-status" height="260"></canvas></div>
-        <div class="chart-card"><div class="chart-card-title">Trend Over Time</div><canvas id="chart-trend" height="260"></canvas></div>
+        <div class="chart-card">
+          <div class="chart-card-title">Closed vs Active — By Engineer</div>
+          <div class="chart-legend" id="legend-ratio"></div>
+          <canvas id="chart-ratio" height="240"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Ticket Distribution</div>
+          <canvas id="chart-per-eng" height="240"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Status Breakdown Per Engineer</div>
+          <div class="chart-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--status-new)"></div>New</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--status-inprogress)"></div>In Progress</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--status-waiting)"></div>Waiting</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--status-closed)"></div>Closed</div>
+          </div>
+          <canvas id="chart-status" height="240"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Trend Over Time</div>
+          <div class="chart-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--status-closed)"></div>Closed</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--status-inprogress)"></div>Active</div>
+          </div>
+          <canvas id="chart-trend" height="240"></canvas>
+        </div>
       </div>
     </div>
-  </div>
-</div>
+
+  </div><!-- end #content -->
+</div><!-- end .container -->
 <div id="toast"></div>
 
 <script>
-const ENG_SCRIPT="https://script.google.com/macros/s/AKfycbyd87MSxzZUXwhU6S4R2p-JHNtHew0aMvVYmN59FyRHbEV7wQYr0RvI4Fpyj887Y9N8/exec";
-const CLIENT_SCRIPT="https://script.google.com/macros/s/AKfycbxa7Qaa0RB6A3cR6rjDqUD-5fj1aoKV1uPPNoX-z1pit5gMNM2bHPmvTOK_nNKUFplTmA/exec";
+const ENG_SCRIPT  = "https://script.google.com/macros/s/AKfycbyd87MSxzZUXwhU6S4R2p-JHNtHew0aMvVYmN59FyRHbEV7wQYr0RvI4Fpyj887Y9N8/exec";
+const CLIENT_SCRIPT = "https://script.google.com/macros/s/AKfycbxa7Qaa0RB6A3cR6rjDqUD-5fj1aoKV1uPPNoX-z1pit5gMNM2bHPmvTOK_nNKUFplTmA/exec";
 
-const USERS={
-  "Mohamed Agha":{pin:"1243",color:"#C9A96E",isManager:true,isIT:false},
-  "Shakeel":     {pin:"1122",color:"#D4C4A0",isManager:false,isIT:true},
-  "Sam":         {pin:"1112",color:"#E8C47A",isManager:false,isIT:false},
-  "Bernard":     {pin:"1212",color:"#C4956A",isManager:false,isIT:false},
-  "Ghulam":      {pin:"2111",color:"#A8C4A0",isManager:false,isIT:false},
-  "Ahmad":       {pin:"2211",color:"#C4A0C4",isManager:false,isIT:false}
+/* ── ENGINEER COLORS — maximally distinct ── */
+const USERS = {
+  "Mohamed Agha": { pin:"1243", color:"#C9A96E", isManager:true,  isIT:false },
+  "Shakeel":      { pin:"1122", color:"#5BA3D9", isManager:false, isIT:true  }, /* blue   */
+  "Sam":          { pin:"1112", color:"#C9A96E", isManager:false, isIT:false }, /* gold   */
+  "Bernard":      { pin:"1212", color:"#E87A3A", isManager:false, isIT:false }, /* orange */
+  "Ghulam":       { pin:"2111", color:"#5DBF8A", isManager:false, isIT:false }, /* green  */
+  "Ahmad":        { pin:"2211", color:"#A97AD9", isManager:false, isIT:false }  /* purple */
 };
 
-const ENG_LIST=["Shakeel","Sam","Bernard","Ghulam","Ahmad"];
-const STATUS_OPTIONS=["New","In Progress","Waiting","Closed"];
-const STATUS_MAP={'New':'new','In Progress':'inprogress','Waiting':'waiting','Closed':'closed'};
+/* ── STATUS COLORS — same as CSS vars ── */
+const STATUS_COLORS = {
+  'New':        '#5BA3D9',
+  'In Progress':'#E8C84A',
+  'Waiting':    '#E87A3A',
+  'Closed':     '#5DBF8A'
+};
 
-let MY_NAME="",allData=[],myTickets=[],newTickets=[],filteredTickets=[];
+const ENG_LIST = ["Shakeel","Sam","Bernard","Ghulam","Ahmad"];
+const ENG_COLORS = ENG_LIST.map(n => USERS[n].color);
+const STATUS_OPTIONS = ["New","In Progress","Waiting","Closed"];
+const STATUS_MAP = {'New':'new','In Progress':'inprogress','Waiting':'waiting','Closed':'closed'};
+
+let MY_NAME="", allData=[], myTickets=[], newTickets=[], filteredTickets=[];
 let selectedStatuses=['New','In Progress','Waiting','Closed'];
 let currentFilter='all';
-let pinBuffer="",pendingConfirm=null;
-let selectedTicketStatus="In Progress",selectedTicketType="hardware";
+let pinBuffer="", pendingConfirm=null;
+let selectedTicketStatus="In Progress", selectedTicketType="hardware";
 let editingTimestamp=null;
 let currentTimePeriod='all';
 let charts={};
 let currentView='table';
-let sortCol='created',sortDir='desc';
+let sortCol='created', sortDir='desc';
 
-// ── FORMAT DATE ──────────────────────────────────────────────
+/* ── FORMAT DATE ── */
 function formatCreated(ts){
-  if(!ts)return{date:'—',time:''};
-  const d=new Date(ts);
-  if(isNaN(d))return{date:'—',time:''};
-  const date=d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
-  const time=d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-  return{date,time};
+  if(!ts) return {date:'—',time:''};
+  const d = new Date(ts);
+  if(isNaN(d)) return {date:'—',time:''};
+  const date = d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  const time = d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  return {date,time};
 }
 
-// ── PIN ──────────────────────────────────────────────────────
-function pinPress(d){if(pinBuffer.length>=4)return;pinBuffer+=d;updateDots();if(pinBuffer.length===4)setTimeout(checkPin,120);}
-function pinDelete(){pinBuffer=pinBuffer.slice(0,-1);updateDots();document.getElementById('pin-error').innerText='';}
+/* ── PIN ── */
+function pinPress(d){ if(pinBuffer.length>=4)return; pinBuffer+=d; updateDots(); if(pinBuffer.length===4)setTimeout(checkPin,120); }
+function pinDelete(){ pinBuffer=pinBuffer.slice(0,-1); updateDots(); document.getElementById('pin-error').innerText=''; }
 function updateDots(){
   for(let i=0;i<4;i++){
     const dot=document.getElementById('dot-'+i);
@@ -507,15 +610,14 @@ function checkPin(){
     localStorage.setItem('svc_name',MY_NAME);
     localStorage.setItem('svc_pin',pinBuffer);
     unlockDashboard();
-  }else{
-    for(let i=0;i<4;i++)document.getElementById('dot-'+i).classList.add('error');
+  } else {
+    for(let i=0;i<4;i++) document.getElementById('dot-'+i).classList.add('error');
     document.getElementById('pin-error').innerText='Incorrect PIN. Please try again.';
-    setTimeout(()=>{pinBuffer='';updateDots();},900);
+    setTimeout(()=>{ pinBuffer=''; updateDots(); },900);
   }
 }
 function unlockDashboard(){
   const u=USERS[MY_NAME];
-  document.documentElement.style.setProperty('--gold',u.color);
   document.getElementById('pin-screen').style.display='none';
   document.getElementById('main').style.display='block';
   document.getElementById('user-badge').innerText=MY_NAME;
@@ -527,76 +629,73 @@ function unlockDashboard(){
     document.getElementById('col-assignee').style.display='';
     document.getElementById('col-actions').style.display='';
     document.getElementById('filter-assignee').style.display='block';
-  }else if(!u.isIT){
+  } else if(!u.isIT){
     document.getElementById('new-tickets-section').style.display='block';
   }
   loadData();
 }
 function logout(){
-  localStorage.removeItem('svc_name');localStorage.removeItem('svc_pin');
-  MY_NAME='';pinBuffer='';updateDots();
+  localStorage.removeItem('svc_name'); localStorage.removeItem('svc_pin');
+  MY_NAME=''; pinBuffer=''; updateDots();
   document.getElementById('pin-error').innerText='';
   document.getElementById('main').style.display='none';
   document.getElementById('content').style.display='none';
   document.getElementById('loading').style.display='flex';
   document.getElementById('pin-screen').style.display='flex';
-  document.documentElement.style.setProperty('--gold','#C9A96E');
 }
 window.onload=()=>{
-  const n=localStorage.getItem('svc_name'),p=localStorage.getItem('svc_pin');
-  if(n&&p&&USERS[n]&&USERS[n].pin===p){MY_NAME=n;pinBuffer=p;unlockDashboard();}
+  const n=localStorage.getItem('svc_name'), p=localStorage.getItem('svc_pin');
+  if(n&&p&&USERS[n]&&USERS[n].pin===p){ MY_NAME=n; pinBuffer=p; unlockDashboard(); }
 };
 
-// ── VIEW TOGGLE ──────────────────────────────────────────────
+/* ── VIEW TOGGLE ── */
 function switchView(view){
   currentView=view;
   document.getElementById('table-view').style.display=view==='table'?'block':'none';
   document.getElementById('analysis-view').style.display=view==='analysis'?'block':'none';
   document.getElementById('vbtn-table').classList.toggle('active',view==='table');
   document.getElementById('vbtn-analysis').classList.toggle('active',view==='analysis');
-  if(view==='analysis')renderAllCharts();
+  if(view==='analysis') renderAllCharts();
 }
 
-// ── TOAST ────────────────────────────────────────────────────
+/* ── TOAST ── */
 function showToast(msg,color){
   const t=document.getElementById('toast');
-  t.innerText=msg;
-  t.style.color=color||'var(--gold)';
-  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);
+  t.innerText=msg; t.style.color=color||'var(--gold)';
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000);
 }
 
-// ── CONFIRM ──────────────────────────────────────────────────
+/* ── CONFIRM ── */
 function showConfirm(title,msg,cb){
   document.getElementById('confirm-title').innerText=title;
   document.getElementById('confirm-msg').innerText=msg;
   pendingConfirm=cb;
   document.getElementById('confirm-overlay').classList.add('show');
 }
-function confirmYes(){document.getElementById('confirm-overlay').classList.remove('show');if(pendingConfirm){pendingConfirm();pendingConfirm=null;}}
-function confirmNo(){document.getElementById('confirm-overlay').classList.remove('show');pendingConfirm=null;refreshUI();}
+function confirmYes(){ document.getElementById('confirm-overlay').classList.remove('show'); if(pendingConfirm){pendingConfirm();pendingConfirm=null;} }
+function confirmNo(){ document.getElementById('confirm-overlay').classList.remove('show'); pendingConfirm=null; refreshUI(); }
 
-// ── JSONP ────────────────────────────────────────────────────
+/* ── JSONP ── */
 function fetchJSONP(url){
   return new Promise((resolve,reject)=>{
     const cbName='cb_'+Math.random().toString(36).substr(2,9);
     const script=document.createElement('script');
-    const timeout=setTimeout(()=>{try{document.body.removeChild(script);}catch(e){}delete window[cbName];reject(new Error('Timeout'));},15000);
-    window[cbName]=(data)=>{clearTimeout(timeout);try{document.body.removeChild(script);}catch(e){}delete window[cbName];resolve(data);};
-    script.onerror=()=>{clearTimeout(timeout);try{document.body.removeChild(script);}catch(e){}delete window[cbName];reject(new Error('Error'));};
+    const timeout=setTimeout(()=>{ try{document.body.removeChild(script);}catch(e){} delete window[cbName]; reject(new Error('Timeout')); },15000);
+    window[cbName]=(data)=>{ clearTimeout(timeout); try{document.body.removeChild(script);}catch(e){} delete window[cbName]; resolve(data); };
+    script.onerror=()=>{ clearTimeout(timeout); try{document.body.removeChild(script);}catch(e){} delete window[cbName]; reject(new Error('Error')); };
     script.src=url+(url.includes('?')?'&':'?')+'callback='+cbName+'&t='+Date.now();
     document.body.appendChild(script);
   });
 }
 
-// ── LOAD DATA ────────────────────────────────────────────────
+/* ── LOAD DATA ── */
 async function loadData(){
   const btn=document.getElementById('rbtn');
-  btn.style.opacity='0.4';btn.innerText='Loading...';
+  btn.style.opacity='0.4'; btn.innerText='Loading...';
   try{
-    const u=USERS[MY_NAME];
-    let engData=[],clientData=[];
+    let engData=[], clientData=[];
     engData=await fetchJSONP(ENG_SCRIPT);
-    try{clientData=await fetchJSONP(CLIENT_SCRIPT);}catch(e){}
+    try{ clientData=await fetchJSONP(CLIENT_SCRIPT); }catch(e){}
 
     const engTs=new Set(engData.filter(r=>r['Timestamp']).map(r=>new Date(r['Timestamp']).getTime()));
     const unassigned=clientData
@@ -620,6 +719,7 @@ async function loadData(){
       .filter(r=>r['Timestamp']&&r['Timestamp'].toString().trim()!=='')
       .sort((a,b)=>new Date(b['Timestamp'])-new Date(a['Timestamp']));
 
+    const u=USERS[MY_NAME];
     myTickets=u.isManager?allData:allData.filter(r=>getVal(r,'Name')===MY_NAME);
     newTickets=allData.filter(r=>{
       const name=getVal(r,'Name');
@@ -632,102 +732,89 @@ async function loadData(){
     document.getElementById('loading').style.display='none';
     document.getElementById('content').style.display='block';
     refreshUI();
-  }catch(e){alert("Error: "+e.message);}
-  btn.style.opacity='1';btn.innerText='Refresh';
+  }catch(e){ alert("Error: "+e.message); }
+  btn.style.opacity='1'; btn.innerText='Refresh';
 }
 
 function refreshUI(){
-  if(USERS[MY_NAME]?.isManager)renderEngCards();
-  updateStats();renderNewTickets();applyFilters();
-  if(currentView==='analysis')renderAllCharts();
+  if(USERS[MY_NAME]?.isManager) renderEngCards();
+  updateStats(); renderNewTickets(); applyFilters();
+  if(currentView==='analysis') renderAllCharts();
 }
 
-function getVal(obj,...keys){for(let key of keys){if(obj[key]!==undefined&&obj[key]!==null&&obj[key].toString().trim()!=='')return obj[key].toString().trim();}return "";}
-function getStatus(r){return getVal(r,'Current Status','Status')||'New';}
+function getVal(obj,...keys){ for(let key of keys){if(obj[key]!==undefined&&obj[key]!==null&&obj[key].toString().trim()!=='')return obj[key].toString().trim();} return ""; }
+function getStatus(r){ return getVal(r,'Current Status','Status')||'New'; }
 function calculateDuration(start,end){
-  const s=new Date(start),e=end?new Date(end):new Date();
-  if(isNaN(s.getTime()))return '—';
-  const h=Math.floor((e-s)/3600000),d=Math.floor(h/24);
+  const s=new Date(start), e=end?new Date(end):new Date();
+  if(isNaN(s.getTime())) return '—';
+  const h=Math.floor((e-s)/3600000), d=Math.floor(h/24);
   return d>0?`${d}d ${h%24}h`:`${h}h`;
 }
 
-// ── SORT ──────────────────────────────────────────────────────
+/* ── SORT ── */
 function sortTable(col){
-  if(sortCol===col){sortDir=sortDir==='asc'?'desc':'asc';}
-  else{sortCol=col;sortDir=col==='created'?'desc':'asc';}
-  // Update header classes
+  if(sortCol===col){ sortDir=sortDir==='asc'?'desc':'asc'; }
+  else{ sortCol=col; sortDir=col==='created'?'desc':'asc'; }
   ['index','type','clinic','status','created','duration'].forEach(c=>{
     const th=document.getElementById('th-'+c);
-    if(th){th.classList.remove('sort-asc','sort-desc');}
+    if(th){ th.classList.remove('sort-asc','sort-desc'); }
   });
-  const activeTh=document.getElementById('th-'+col);
-  if(activeTh)activeTh.classList.add(sortDir==='asc'?'sort-asc':'sort-desc');
+  const th=document.getElementById('th-'+col);
+  if(th) th.classList.add(sortDir==='asc'?'sort-asc':'sort-desc');
   renderMyTickets();
 }
-
 function getSortValue(r,col){
   switch(col){
     case 'clinic': return getVal(r,'Customer/Account Name','Clinic/Hospital Name').toLowerCase();
-    case 'type': {
-      const t=getVal(r,'Ticket Type').toLowerCase();
-      return t.includes('computer')||t.includes('system')||t.includes('it)')?'it':'hw';
-    }
+    case 'type':{ const t=getVal(r,'Ticket Type').toLowerCase(); return t.includes('computer')||t.includes('system')||t.includes('it)')?'it':'hw'; }
     case 'status': return getStatus(r).toLowerCase();
     case 'created': return new Date(getVal(r,'Timestamp')).getTime()||0;
-    case 'duration': {
-      const s=new Date(getVal(r,'Timestamp'));
-      const e=getVal(r,'Closing Date')?new Date(getVal(r,'Closing Date')):new Date();
-      return isNaN(s)?0:(e-s);
-    }
+    case 'duration':{ const s=new Date(getVal(r,'Timestamp')); const e=getVal(r,'Closing Date')?new Date(getVal(r,'Closing Date')):new Date(); return isNaN(s)?0:(e-s); }
     default: return 0;
   }
 }
 
-// ── FILTERS ──────────────────────────────────────────────────
+/* ── FILTERS ── */
 function applyFilters(){
   const search=(document.getElementById('search-input').value||'').toLowerCase().trim();
   const statusF=document.getElementById('filter-status').value;
   const typeF=document.getElementById('filter-type').value;
   const assigneeF=document.getElementById('filter-assignee').value;
 
-  // Start from status-slice filtered tickets
   let base=myTickets.filter(r=>{
     const s=getStatus(r).toLowerCase();
     return selectedStatuses.some(st=>{
-      if(st==='Waiting')return s.includes('waiting');
-      if(st==='New')return s==='new'||s==='';
-      if(st==='In Progress')return s.includes('in progress');
-      if(st==='Closed')return s.includes('closed');
+      if(st==='Waiting') return s.includes('waiting');
+      if(st==='New') return s==='new'||s==='';
+      if(st==='In Progress') return s.includes('in progress');
+      if(st==='Closed') return s.includes('closed');
       return false;
     });
   });
 
-  // Search filter
   if(search){
     base=base.filter(r=>{
-      const clinic=getVal(r,'Customer/Account Name','Clinic/Hospital Name').toLowerCase();
-      const contact=getVal(r,'Contact Person Name').toLowerCase();
-      const desc=getVal(r,'Problem Description','Description of the Technical Issue').toLowerCase();
-      const phone=getVal(r,'Mobile Number').toLowerCase();
-      const loc=getVal(r,'Location').toLowerCase();
-      const device=getVal(r,'Device Model').toLowerCase();
-      return clinic.includes(search)||contact.includes(search)||desc.includes(search)||phone.includes(search)||loc.includes(search)||device.includes(search);
+      const fields=[
+        getVal(r,'Customer/Account Name','Clinic/Hospital Name'),
+        getVal(r,'Contact Person Name'),
+        getVal(r,'Problem Description','Description of the Technical Issue'),
+        getVal(r,'Mobile Number'),
+        getVal(r,'Location'),
+        getVal(r,'Device Model')
+      ].join(' ').toLowerCase();
+      return fields.includes(search);
     });
   }
-
-  // Status filter
   if(statusF){
     base=base.filter(r=>{
       const s=getStatus(r).toLowerCase();
-      if(statusF==='Waiting')return s.includes('waiting');
-      if(statusF==='In Progress')return s.includes('in progress');
-      if(statusF==='New')return s==='new'||s==='';
-      if(statusF==='Closed')return s.includes('closed');
+      if(statusF==='Waiting') return s.includes('waiting');
+      if(statusF==='In Progress') return s.includes('in progress');
+      if(statusF==='New') return s==='new'||s==='';
+      if(statusF==='Closed') return s.includes('closed');
       return true;
     });
   }
-
-  // Type filter
   if(typeF){
     base=base.filter(r=>{
       const t=getVal(r,'Ticket Type').toLowerCase();
@@ -735,32 +822,19 @@ function applyFilters(){
       return typeF==='IT'?isIT:!isIT;
     });
   }
-
-  // Assignee filter (manager only)
-  if(assigneeF){
-    base=base.filter(r=>getVal(r,'Name')===assigneeF);
-  }
+  if(assigneeF) base=base.filter(r=>getVal(r,'Name')===assigneeF);
 
   filteredTickets=base;
-
-  // Sort
   filteredTickets.sort((a,b)=>{
-    const av=getSortValue(a,sortCol);
-    const bv=getSortValue(b,sortCol);
-    let cmp=0;
-    if(typeof av==='number'&&typeof bv==='number')cmp=av-bv;
-    else cmp=String(av).localeCompare(String(bv));
+    const av=getSortValue(a,sortCol), bv=getSortValue(b,sortCol);
+    let cmp=typeof av==='number'&&typeof bv==='number'?av-bv:String(av).localeCompare(String(bv));
     return sortDir==='asc'?cmp:-cmp;
   });
 
-  // Count display
-  const total=myTickets.length;
-  const shown=filteredTickets.length;
+  const total=myTickets.length, shown=filteredTickets.length;
   document.getElementById('filter-count').innerText=shown<total?`Showing ${shown} of ${total}`:`${total} tickets`;
-
   renderMyTickets();
 }
-
 function clearFilters(){
   document.getElementById('search-input').value='';
   document.getElementById('filter-status').value='';
@@ -769,7 +843,7 @@ function clearFilters(){
   applyFilters();
 }
 
-// ── MANAGER ENG CARDS ─────────────────────────────────────────
+/* ── ENG CARDS ── */
 function renderEngCards(){
   const grid=document.getElementById('eng-cards');
   const cards=[{name:'all',color:'#C9A96E',label:'All Team'},...ENG_LIST.map(n=>({name:n,color:USERS[n].color,label:n}))];
@@ -777,28 +851,25 @@ function renderEngCards(){
     const count=c.name==='all'?allData.length:allData.filter(r=>getVal(r,'Name')===c.name).length;
     return `<div class="eng-card ${currentFilter===c.name?'active':''}" onclick="filterByEng('${c.name}')">
       <div class="eng-card-bar" style="background:${c.color}"></div>
-      <div class="eng-card-name" style="color:${currentFilter===c.name?c.color:'var(--text2)'}">${c.label}</div>
-      <div style="font-size:10px;color:var(--muted);font-family:'Cormorant Garamond',serif;font-style:italic">${count} tickets</div>
+      <div class="eng-card-name" style="${currentFilter===c.name?'color:'+c.color:''}">${c.label}</div>
+      <div class="eng-card-count">${count} tickets</div>
     </div>`;
   }).join('');
 }
-
 function filterByEng(name){
   currentFilter=name;
   myTickets=name==='all'?allData:allData.filter(r=>getVal(r,'Name')===name);
-  applyFilters();
-  renderEngCards();
-  updateStats();
+  applyFilters(); renderEngCards(); updateStats();
 }
 
-// ── STATS ─────────────────────────────────────────────────────
+/* ── STATS ── */
 function updateStats(){
   const c={closed:0,open:0,inprogress:0,waiting:0};
   myTickets.forEach(r=>{
     const s=getStatus(r).toLowerCase();
-    if(s.includes('closed'))c.closed++;
-    else if(s.includes('in progress'))c.inprogress++;
-    else if(s.includes('waiting'))c.waiting++;
+    if(s.includes('closed')) c.closed++;
+    else if(s.includes('in progress')) c.inprogress++;
+    else if(s.includes('waiting')) c.waiting++;
     else c.open++;
   });
   document.getElementById('count-closed').innerText=c.closed;
@@ -806,46 +877,45 @@ function updateStats(){
   document.getElementById('count-inprogress').innerText=c.inprogress;
   document.getElementById('count-waiting').innerText=c.waiting;
 }
-
 function toggleSlice(status){
   const i=selectedStatuses.indexOf(status);
-  if(i>-1){selectedStatuses.splice(i,1);document.getElementById('btn-'+status).classList.remove('active-slice');}
-  else{selectedStatuses.push(status);document.getElementById('btn-'+status).classList.add('active-slice');}
+  if(i>-1){ selectedStatuses.splice(i,1); document.getElementById('btn-'+status).classList.remove('active-slice'); }
+  else{ selectedStatuses.push(status); document.getElementById('btn-'+status).classList.add('active-slice'); }
   applyFilters();
 }
 
-// ── CLAIM ─────────────────────────────────────────────────────
+/* ── CLAIM ── */
 async function claimTicket(timestamp,btnEl){
-  btnEl.disabled=true;btnEl.innerText='Claiming...';
+  btnEl.disabled=true; btnEl.innerText='Claiming...';
   try{
     const r=await fetchJSONP(ENG_SCRIPT+'?action=claim&timestamp='+encodeURIComponent(timestamp)+'&name='+encodeURIComponent(MY_NAME));
-    if(r.claimed){showToast('Ticket claimed');loadData();}
-    else{showToast('Already claimed by '+r.assignedTo,'var(--danger)');loadData();}
-  }catch(e){showToast('Error','var(--danger)');btnEl.disabled=false;btnEl.innerText='Claim';}
+    if(r.claimed){ showToast('Ticket claimed'); loadData(); }
+    else{ showToast('Already claimed by '+r.assignedTo,'var(--danger)'); loadData(); }
+  }catch(e){ showToast('Error','var(--danger)'); btnEl.disabled=false; btnEl.innerText='Claim'; }
 }
 
-// ── ASSIGN ────────────────────────────────────────────────────
+/* ── ASSIGN ── */
 async function assignTicket(realIdx,selectEl,btnEl){
   const selected=selectEl.value;
-  if(!selected){showToast('Select an option','var(--danger)');return;}
-  btnEl.disabled=true;btnEl.innerText='...';
+  if(!selected){ showToast('Select an option','var(--danger)'); return; }
+  btnEl.disabled=true; btnEl.innerText='...';
   const ticket=allData[realIdx];
   const timestamp=getVal(ticket,'Timestamp');
   if(selected==='UNASSIGN'){
     showConfirm('Unassign Ticket','Remove this ticket from the engineer?',async()=>{
-      try{await fetchJSONP(ENG_SCRIPT+'?action=deleteRow&timestamp='+encodeURIComponent(timestamp));showToast('Ticket unassigned');loadData();}
-      catch(e){showToast('Error','var(--danger)');}
+      try{ await fetchJSONP(ENG_SCRIPT+'?action=deleteRow&timestamp='+encodeURIComponent(timestamp)); showToast('Ticket unassigned'); loadData(); }
+      catch(e){ showToast('Error','var(--danger)'); }
     });
-    btnEl.disabled=false;btnEl.innerText='✓';
-  }else{
+    btnEl.disabled=false; btnEl.innerText='✓';
+  } else {
     try{
       await fetchJSONP(ENG_SCRIPT+'?action=assign&timestamp='+encodeURIComponent(timestamp)+'&name='+encodeURIComponent(selected));
-      showToast('Assigned to '+selected);loadData();
-    }catch(e){showToast('Error','var(--danger)');btnEl.disabled=false;btnEl.innerText='✓';}
+      showToast('Assigned to '+selected); loadData();
+    }catch(e){ showToast('Error','var(--danger)'); btnEl.disabled=false; btnEl.innerText='✓'; }
   }
 }
 
-// ── STATUS UPDATE ─────────────────────────────────────────────
+/* ── STATUS UPDATE ── */
 function updateStatus(idx,newStatus,selectEl){
   const ticket=filteredTickets[idx];
   const myIdx=myTickets.indexOf(ticket);
@@ -855,37 +925,37 @@ function updateStatus(idx,newStatus,selectEl){
     const timestamp=getVal(ticket,'Timestamp');
     try{
       await fetchJSONP(ENG_SCRIPT+'?action=updateStatus&timestamp='+encodeURIComponent(timestamp)+'&status='+encodeURIComponent(newStatus));
-      if(myIdx>-1)myTickets[myIdx]['Current Status']=newStatus;
-      showToast('Status updated');loadData();
-    }catch(e){showToast('Error','var(--danger)');loadData();}
+      if(myIdx>-1) myTickets[myIdx]['Current Status']=newStatus;
+      showToast('Status updated'); loadData();
+    }catch(e){ showToast('Error','var(--danger)'); loadData(); }
   });
 }
 
-// ── SPARE PARTS ───────────────────────────────────────────────
+/* ── SPARE PARTS ── */
 async function saveSpareParts(idx,inputEl,btnEl){
   const parts=inputEl.value.trim();
-  if(!parts){showToast('Enter spare parts','var(--danger)');return;}
-  btnEl.disabled=true;btnEl.innerText='Saving...';
+  if(!parts){ showToast('Enter spare parts','var(--danger)'); return; }
+  btnEl.disabled=true; btnEl.innerText='Saving...';
   const ticket=filteredTickets[idx];
   const timestamp=getVal(ticket,'Timestamp');
   try{
     await fetchJSONP(ENG_SCRIPT+'?action=updateStatus&timestamp='+encodeURIComponent(timestamp)+'&status=Waiting&spareParts='+encodeURIComponent(parts));
-    showToast('Spare parts saved');loadData();
-  }catch(e){showToast('Error','var(--danger)');loadData();}
+    showToast('Spare parts saved'); loadData();
+  }catch(e){ showToast('Error','var(--danger)'); loadData(); }
 }
 
-// ── DELETE ────────────────────────────────────────────────────
+/* ── DELETE ── */
 function deleteTicket(realIdx){
   const ticket=allData[realIdx];
   const timestamp=getVal(ticket,'Timestamp');
   const clinic=getVal(ticket,'Customer/Account Name','Clinic/Hospital Name');
   showConfirm('Delete Ticket',`Permanently delete ticket for "${clinic}"?`,async()=>{
-    try{await fetchJSONP(ENG_SCRIPT+'?action=deleteRow&timestamp='+encodeURIComponent(timestamp));showToast('Ticket deleted','var(--danger)');loadData();}
-    catch(e){showToast('Error','var(--danger)');}
+    try{ await fetchJSONP(ENG_SCRIPT+'?action=deleteRow&timestamp='+encodeURIComponent(timestamp)); showToast('Ticket deleted','var(--danger)'); loadData(); }
+    catch(e){ showToast('Error','var(--danger)'); }
   });
 }
 
-// ── EDIT ──────────────────────────────────────────────────────
+/* ── EDIT ── */
 function editTicket(realIdx){
   const ticket=allData[realIdx];
   editingTimestamp=getVal(ticket,'Timestamp');
@@ -903,7 +973,7 @@ function editTicket(realIdx){
   document.getElementById('ticket-overlay').classList.add('show');
 }
 
-// ── ADD MODAL ─────────────────────────────────────────────────
+/* ── ADD MODAL ── */
 function openTicketModal(){
   editingTimestamp=null;
   const u=USERS[MY_NAME];
@@ -919,15 +989,14 @@ function openTicketModal(){
     document.getElementById('topt-hw').className='type-opt sel-hw';
     document.getElementById('topt-it').className='type-opt';
     selectStatus('New');
-  }else{
+  } else {
     document.getElementById('type-group').style.display='none';
     document.getElementById('assign-group').style.display='none';
     selectStatus('In Progress');
   }
   document.getElementById('ticket-overlay').classList.add('show');
 }
-function closeTicketModal(){document.getElementById('ticket-overlay').classList.remove('show');editingTimestamp=null;}
-
+function closeTicketModal(){ document.getElementById('ticket-overlay').classList.remove('show'); editingTimestamp=null; }
 function selectType(type){
   selectedTicketType=type;
   document.getElementById('topt-hw').className='type-opt'+(type==='hardware'?' sel-hw':'');
@@ -936,17 +1005,16 @@ function selectType(type){
 }
 function selectStatus(status){
   selectedTicketStatus=status;
-  STATUS_OPTIONS.forEach(s=>{const el=document.getElementById('sopt-'+s);if(el)el.className='status-opt';});
+  STATUS_OPTIONS.forEach(s=>{ const el=document.getElementById('sopt-'+s); if(el) el.className='status-opt'; });
   const el=document.getElementById('sopt-'+status);
-  if(el)el.className='status-opt sel-'+STATUS_MAP[status];
+  if(el) el.className='status-opt sel-'+STATUS_MAP[status];
   document.getElementById('spare-group').style.display=status==='Waiting'?'block':'none';
 }
-
 async function submitTicket(){
   const clinic=document.getElementById('f-clinic').value.trim();
-  if(!clinic){showToast('Clinic name required','var(--danger)');return;}
+  if(!clinic){ showToast('Clinic name required','var(--danger)'); return; }
   const btn=document.getElementById('ticket-submit-btn');
-  btn.disabled=true;btn.innerText='Saving...';
+  btn.disabled=true; btn.innerText='Saving...';
   const phone=document.getElementById('f-phone').value.trim();
   const device=document.getElementById('f-device').value.trim();
   const location=document.getElementById('f-location').value.trim();
@@ -957,30 +1025,30 @@ async function submitTicket(){
     if(editingTimestamp){
       await fetchJSONP(ENG_SCRIPT+'?action=editRow&timestamp='+encodeURIComponent(editingTimestamp)+'&name='+encodeURIComponent(getVal(allData.find(r=>getVal(r,'Timestamp')===editingTimestamp)||{},'Name'))+'&status='+encodeURIComponent(selectedTicketStatus)+'&clinic='+encodeURIComponent(clinic)+'&phone='+encodeURIComponent(phone)+'&device='+encodeURIComponent(device)+'&location='+encodeURIComponent(location)+'&description='+encodeURIComponent(desc)+'&spareParts='+encodeURIComponent(spare));
       showToast('Ticket updated');
-    }else{
+    } else {
       const timestamp=new Date().toISOString();
-      let assignName='',ticketType='',status=selectedTicketStatus;
+      let assignName='', ticketType='', status=selectedTicketStatus;
       if(u.isManager){
         const isIT=selectedTicketType==='it';
         ticketType=isIT?'Computer / System (IT)':'Equipment / Dental Unit';
         assignName=isIT?'Shakeel':(document.getElementById('f-assign').value||'');
-        if(!assignName)status='New';
-      }else{
+        if(!assignName) status='New';
+      } else {
         ticketType=u.isIT?'Computer / System (IT)':'Equipment / Dental Unit';
         assignName=MY_NAME;
       }
       await fetchJSONP(ENG_SCRIPT+'?action=addRow&timestamp='+encodeURIComponent(timestamp)+'&name='+encodeURIComponent(assignName)+'&status='+encodeURIComponent(status)+'&clinic='+encodeURIComponent(clinic)+'&phone='+encodeURIComponent(phone)+'&device='+encodeURIComponent(device)+'&location='+encodeURIComponent(location)+'&description='+encodeURIComponent(desc)+'&ticketType='+encodeURIComponent(ticketType)+'&spareParts='+encodeURIComponent(spare));
       showToast('Ticket added');
     }
-    closeTicketModal();loadData();
-  }catch(e){showToast('Error saving','var(--danger)');}
-  btn.disabled=false;btn.innerText=editingTimestamp?'Save Changes':'Add Ticket';
+    closeTicketModal(); loadData();
+  }catch(e){ showToast('Error saving','var(--danger)'); }
+  btn.disabled=false; btn.innerText=editingTimestamp?'Save Changes':'Add Ticket';
 }
 
-// ── RENDER NEW TICKETS ────────────────────────────────────────
+/* ── RENDER NEW TICKETS ── */
 function renderNewTickets(){
   const tbody=document.getElementById('tbody-new');
-  if(!tbody)return;
+  if(!tbody) return;
   if(newTickets.length===0){
     tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px;font-family:'Cormorant Garamond',serif;font-style:italic">No unassigned tickets</td></tr>`;
     return;
@@ -1008,7 +1076,18 @@ function renderNewTickets(){
   }).join('');
 }
 
-// ── RENDER MY TICKETS ─────────────────────────────────────────
+/* ── STATUS BADGE HELPER ── */
+function statusBadge(statusVal){
+  const s=statusVal.toLowerCase();
+  let cls='sb-new', label=statusVal;
+  if(s.includes('in progress')){ cls='sb-inprogress'; label='In Progress'; }
+  else if(s.includes('waiting')){ cls='sb-waiting'; label='Waiting'; }
+  else if(s.includes('closed')){ cls='sb-closed'; label='Closed'; }
+  else{ cls='sb-new'; label='New'; }
+  return `<span class="status-badge ${cls}">${label}</span>`;
+}
+
+/* ── RENDER MY TICKETS ── */
 function renderMyTickets(){
   const isManager=USERS[MY_NAME]?.isManager;
   const tbody=document.getElementById('tbody-mine');
@@ -1070,9 +1149,9 @@ function renderMyTickets(){
           <button class="btn btn-sm btn-outline" id="abtn-${realIdx}"
             onclick="assignTicket(${realIdx},document.getElementById('asel-${realIdx}'),document.getElementById('abtn-${realIdx}'))">✓</button>
         </div>`;
-      }else{
+      } else {
         assigneeCell=`<div class="assign-wrap">
-          <span style="font-family:'Cormorant Garamond',serif;font-size:14px;color:${engCol}">${nameVal}</span>
+          <span style="font-family:'Cormorant Garamond',serif;font-size:14px;color:${engCol};font-weight:500">${nameVal}</span>
           <select class="assign-select" id="asel-${realIdx}">
             <option value="">Change...</option>
             ${ENG_LIST.filter(n=>n!==nameVal).map(n=>`<option value="${n}">${n}</option>`).join('')}
@@ -1106,13 +1185,13 @@ function renderMyTickets(){
   }).join('');
 }
 
-// ── CHARTS ────────────────────────────────────────────────────
+/* ── CHARTS ── */
 function getFilteredData(){
   const now=new Date();
   return allData.filter(r=>{
-    if(currentTimePeriod==='all')return true;
+    if(currentTimePeriod==='all') return true;
     const ts=new Date(getVal(r,'Timestamp'));
-    if(isNaN(ts))return false;
+    if(isNaN(ts)) return false;
     const diff=(now-ts)/(1000*60*60*24);
     return currentTimePeriod==='week'?diff<=7:diff<=30;
   });
@@ -1123,73 +1202,180 @@ function setTimePeriod(p,btn){
   btn.classList.add('active');
   renderAllCharts();
 }
-function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+function destroyChart(id){ if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
+
 function renderAllCharts(){
   const data=getFilteredData();
   Chart.defaults.color='#8A7A6A';
   Chart.defaults.font.family="'Jost', sans-serif";
-  const so={ticks:{color:'#8A7A6A'},grid:{color:'#C9A96E10'}};
+  const gridColor='#C9A96E15';
+  const so={ ticks:{color:'#C9B99A',font:{size:11}}, grid:{color:gridColor} };
+
+  /* KPI CARDS */
   const total=data.length;
   const closed=data.filter(r=>getStatus(r).toLowerCase().includes('closed')).length;
   const inprog=data.filter(r=>getStatus(r).toLowerCase().includes('in progress')).length;
   const waiting=data.filter(r=>getStatus(r).toLowerCase().includes('waiting')).length;
   const closeRate=total>0?Math.round((closed/total)*100):0;
   document.getElementById('kpi-grid').innerHTML=`
-    <div class="kpi-card"><div class="kpi-value">${total}</div><div class="kpi-label">Total</div></div>
-    <div class="kpi-card"><div class="kpi-value">${closed}</div><div class="kpi-label">Closed</div></div>
-    <div class="kpi-card"><div class="kpi-value" style="color:#E8C47A">${inprog}</div><div class="kpi-label">In Progress</div></div>
-    <div class="kpi-card"><div class="kpi-value" style="color:#C4956A">${waiting}</div><div class="kpi-label">Waiting</div></div>
-    <div class="kpi-card"><div class="kpi-value">${closeRate}%</div><div class="kpi-label">Close Rate</div></div>
+    <div class="kpi-card kpi-total"><div class="kpi-value">${total}</div><div class="kpi-label">Total</div></div>
+    <div class="kpi-card kpi-closed"><div class="kpi-value">${closed}</div><div class="kpi-label">Closed</div></div>
+    <div class="kpi-card kpi-inprog"><div class="kpi-value">${inprog}</div><div class="kpi-label">In Progress</div></div>
+    <div class="kpi-card kpi-waiting"><div class="kpi-value">${waiting}</div><div class="kpi-label">Waiting</div></div>
+    <div class="kpi-card kpi-rate"><div class="kpi-value">${closeRate}%</div><div class="kpi-label">Close Rate</div></div>
   `;
+
+  /* CHART 1 — Closed vs Active per engineer — each bar = engineer color */
   destroyChart('ratio');
+  const legend=document.getElementById('legend-ratio');
+  if(legend) legend.innerHTML=ENG_LIST.map(n=>`<div class="legend-item"><div class="legend-dot" style="background:${USERS[n].color}"></div>${n}</div>`).join('');
+
   charts['ratio']=new Chart(document.getElementById('chart-ratio').getContext('2d'),{
     type:'bar',
-    data:{labels:ENG_LIST,datasets:[
-      {label:'Closed',data:ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&getStatus(r).toLowerCase().includes('closed')).length),backgroundColor:'#C9A96E50',borderColor:'#C9A96E',borderWidth:1,borderRadius:2},
-      {label:'Active',data:ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&!getStatus(r).toLowerCase().includes('closed')).length),backgroundColor:'#E8D5B025',borderColor:'#E8D5B0',borderWidth:1,borderRadius:2}
-    ]},
-    options:{responsive:true,plugins:{legend:{labels:{color:'#C9B99A',font:{size:11}}}},scales:{x:so,y:{...so,beginAtZero:true}}}
+    data:{
+      labels:ENG_LIST,
+      datasets:[
+        {
+          label:'Closed',
+          data:ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&getStatus(r).toLowerCase().includes('closed')).length),
+          /* solid fill = engineer's distinct color */
+          backgroundColor:ENG_COLORS.map(c=>c+'CC'),
+          borderColor:ENG_COLORS,
+          borderWidth:1,
+          borderRadius:3
+        },
+        {
+          label:'Active',
+          data:ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&!getStatus(r).toLowerCase().includes('closed')).length),
+          /* hatched = lighter version */
+          backgroundColor:ENG_COLORS.map(c=>c+'33'),
+          borderColor:ENG_COLORS.map(c=>c+'99'),
+          borderWidth:1,
+          borderRadius:3,
+          borderDash:[4,2]
+        }
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{
+          labels:{
+            color:'#C9B99A',font:{size:11},
+            generateLabels:(chart)=>[
+              {text:'Closed (solid)',fillStyle:'#C9A96ECC',strokeStyle:'#C9A96E',lineWidth:1},
+              {text:'Active (light)',fillStyle:'#C9A96E33',strokeStyle:'#C9A96E99',lineWidth:1}
+            ]
+          }
+        }
+      },
+      scales:{x:so,y:{...so,beginAtZero:true}}
+    }
   });
+
+  /* CHART 2 — Donut — each engineer a clearly distinct color */
   destroyChart('per-eng');
   charts['per-eng']=new Chart(document.getElementById('chart-per-eng').getContext('2d'),{
     type:'doughnut',
-    data:{labels:ENG_LIST,datasets:[{
-      data:ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n).length),
-      backgroundColor:['#C9A96E50','#E8C47A50','#C4956A50','#A8C4A050','#C4A0C450'],
-      borderColor:['#C9A96E','#E8C47A','#C4956A','#A8C4A0','#C4A0C4'],borderWidth:1
-    }]},
-    options:{responsive:true,plugins:{legend:{labels:{color:'#C9B99A',font:{size:11}}}},cutout:'65%'}
+    data:{
+      labels:ENG_LIST,
+      datasets:[{
+        data:ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n).length),
+        backgroundColor:['#5BA3D9BB','#C9A96EBB','#E87A3ABB','#5DBF8ABB','#A97AD9BB'],
+        borderColor:    ['#5BA3D9',  '#C9A96E',  '#E87A3A',  '#5DBF8A',  '#A97AD9'],
+        borderWidth:2,
+        hoverOffset:8
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{labels:{color:'#C9B99A',font:{size:11},padding:16}}},
+      cutout:'60%'
+    }
   });
+
+  /* CHART 3 — Status breakdown stacked — each status its own high-contrast color */
   destroyChart('status');
   charts['status']=new Chart(document.getElementById('chart-status').getContext('2d'),{
     type:'bar',
-    data:{labels:ENG_LIST,datasets:[
-      {label:'New',data:ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&(getStatus(r).toLowerCase()==='new'||getStatus(r)==='') ).length),backgroundColor:'#D4C4A025',borderColor:'#D4C4A0',borderWidth:1,borderRadius:2},
-      {label:'In Progress',data:ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&getStatus(r).toLowerCase().includes('in progress')).length),backgroundColor:'#E8C47A40',borderColor:'#E8C47A',borderWidth:1,borderRadius:2},
-      {label:'Waiting',data:ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&getStatus(r).toLowerCase().includes('waiting')).length),backgroundColor:'#C4956A40',borderColor:'#C4956A',borderWidth:1,borderRadius:2},
-      {label:'Closed',data:ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&getStatus(r).toLowerCase().includes('closed')).length),backgroundColor:'#C9A96E50',borderColor:'#C9A96E',borderWidth:1,borderRadius:2}
-    ]},
-    options:{responsive:true,plugins:{legend:{labels:{color:'#C9B99A',font:{size:11}}}},scales:{x:{...so,stacked:true},y:{...so,stacked:true,beginAtZero:true}}}
+    data:{
+      labels:ENG_LIST,
+      datasets:[
+        {
+          label:'New',
+          data:ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&(getStatus(r).toLowerCase()==='new'||getStatus(r)==='') ).length),
+          backgroundColor:'#5BA3D9BB', borderColor:'#5BA3D9', borderWidth:1, borderRadius:2
+        },
+        {
+          label:'In Progress',
+          data:ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&getStatus(r).toLowerCase().includes('in progress')).length),
+          backgroundColor:'#E8C84ABB', borderColor:'#E8C84A', borderWidth:1, borderRadius:2
+        },
+        {
+          label:'Waiting',
+          data:ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&getStatus(r).toLowerCase().includes('waiting')).length),
+          backgroundColor:'#E87A3ABB', borderColor:'#E87A3A', borderWidth:1, borderRadius:2
+        },
+        {
+          label:'Closed',
+          data:ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&getStatus(r).toLowerCase().includes('closed')).length),
+          backgroundColor:'#5DBF8ABB', borderColor:'#5DBF8A', borderWidth:1, borderRadius:2
+        }
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{labels:{color:'#C9B99A',font:{size:11},padding:14}}},
+      scales:{
+        x:{...so,stacked:true},
+        y:{...so,stacked:true,beginAtZero:true}
+      }
+    }
   });
+
+  /* CHART 4 — Trend line — closed=green, active=amber */
   destroyChart('trend');
   const sorted=[...data].sort((a,b)=>new Date(a['Timestamp'])-new Date(b['Timestamp']));
   const weeks={};
   sorted.forEach(r=>{
     const d=new Date(getVal(r,'Timestamp'));
-    if(isNaN(d))return;
+    if(isNaN(d)) return;
     const wk=d.toLocaleString('default',{month:'short',day:'numeric'});
-    if(!weeks[wk]){weeks[wk]={closed:0,active:0};}
-    if(getStatus(r).toLowerCase().includes('closed'))weeks[wk].closed++;
+    if(!weeks[wk]){ weeks[wk]={closed:0,active:0}; }
+    if(getStatus(r).toLowerCase().includes('closed')) weeks[wk].closed++;
     else weeks[wk].active++;
   });
   const wl=Object.keys(weeks);
   charts['trend']=new Chart(document.getElementById('chart-trend').getContext('2d'),{
     type:'line',
-    data:{labels:wl,datasets:[
-      {label:'Closed',data:wl.map(w=>weeks[w].closed),borderColor:'#C9A96E',backgroundColor:'#C9A96E10',fill:true,tension:0.4,pointBackgroundColor:'#C9A96E',pointRadius:3,borderWidth:1.5},
-      {label:'Active',data:wl.map(w=>weeks[w].active),borderColor:'#E8D5B060',backgroundColor:'#E8D5B008',fill:true,tension:0.4,pointBackgroundColor:'#E8D5B0',pointRadius:3,borderWidth:1.5}
-    ]},
-    options:{responsive:true,plugins:{legend:{labels:{color:'#C9B99A',font:{size:11}}}},scales:{x:so,y:{...so,beginAtZero:true}}}
+    data:{
+      labels:wl,
+      datasets:[
+        {
+          label:'Closed',
+          data:wl.map(w=>weeks[w].closed),
+          borderColor:'#5DBF8A',
+          backgroundColor:'#5DBF8A20',
+          fill:true,tension:0.4,
+          pointBackgroundColor:'#5DBF8A',
+          pointRadius:4,borderWidth:2
+        },
+        {
+          label:'Active',
+          data:wl.map(w=>weeks[w].active),
+          borderColor:'#E8C84A',
+          backgroundColor:'#E8C84A15',
+          fill:true,tension:0.4,
+          pointBackgroundColor:'#E8C84A',
+          pointRadius:4,borderWidth:2
+        }
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{labels:{color:'#C9B99A',font:{size:11},padding:14}}},
+      scales:{x:so,y:{...so,beginAtZero:true}}
+    }
   });
 }
 </script>
