@@ -6,6 +6,7 @@
 <title>Medica — Service Tickets</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <style>
   :root {
     --bg:#0D0B09;
@@ -20,19 +21,17 @@
     --text2:#C9B99A;
     --muted:#8A7A6A;
 
-    /* STATUS COLORS — high contrast, clearly different */
-    --status-new:#5BA3D9;        /* clear blue */
-    --status-inprogress:#E8C84A; /* bright amber */
-    --status-waiting:#E87A3A;    /* vivid orange */
-    --status-closed:#5DBF8A;     /* clear green */
-    --status-unassigned:#D96B9E; /* pink/rose */
+    --status-new:#5BA3D9;
+    --status-inprogress:#E8C84A;
+    --status-waiting:#E87A3A;
+    --status-closed:#5DBF8A;
+    --status-unassigned:#D96B9E;
 
-    /* ENGINEER COLORS — maximally distinct */
-    --eng-shakeel:#5BA3D9;   /* blue */
-    --eng-sam:#C9A96E;       /* brand gold */
-    --eng-bernard:#E87A3A;   /* orange */
-    --eng-ghulam:#5DBF8A;    /* green */
-    --eng-ahmad:#A97AD9;     /* purple */
+    --eng-shakeel:#5BA3D9;
+    --eng-sam:#C9A96E;
+    --eng-bernard:#E87A3A;
+    --eng-ghulam:#5DBF8A;
+    --eng-ahmad:#A97AD9;
 
     --danger:#D95B5B;
   }
@@ -40,7 +39,6 @@
   *{margin:0;padding:0;box-sizing:border-box;}
   body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-weight:300;}
 
-  /* PIN SCREEN */
   #pin-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:32px;position:fixed;inset:0;z-index:100;background:var(--bg);}
   .pin-logo img{height:54px;width:auto;mix-blend-mode:screen;opacity:0.95;display:block;}
   .pin-logo-text{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:400;color:var(--gold);letter-spacing:2px;display:none;}
@@ -59,10 +57,8 @@
   .pin-key.zero{grid-column:2;}
   .pin-error{color:var(--danger);font-size:11px;height:16px;text-align:center;letter-spacing:1px;}
 
-  /* LAYOUT */
   .container{max-width:1600px;margin:0 auto;padding:28px 24px;}
 
-  /* HEADER */
   header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:14px;border-bottom:1px solid var(--border);padding-bottom:18px;}
   .header-logo img{height:42px;width:auto;mix-blend-mode:screen;opacity:0.93;display:block;}
   .header-logo-text{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:400;color:var(--gold);letter-spacing:2px;display:none;}
@@ -70,7 +66,6 @@
   .header-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
   .user-badge{font-family:'Cormorant Garamond',serif;font-size:12px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;border:1px solid var(--border2);padding:6px 14px;}
 
-  /* BUTTONS */
   .btn{border:none;padding:9px 18px;cursor:pointer;font-family:'Jost',sans-serif;font-size:11px;font-weight:400;letter-spacing:1.5px;text-transform:uppercase;-webkit-appearance:none;appearance:none;transition:all .2s;}
   .btn-gold{background:var(--gold);color:#0D0B09;}
   .btn-gold:hover{background:var(--gold-light);}
@@ -81,12 +76,10 @@
   .btn-danger{background:transparent;border:1px solid var(--danger);color:var(--danger);}
   .btn-sm{padding:4px 12px;font-size:10px;}
 
-  /* VIEW TOGGLE */
   .view-toggle{display:flex;border:1px solid var(--border2);overflow:hidden;}
   .view-btn{padding:8px 18px;cursor:pointer;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;border:none;background:transparent;color:var(--muted);-webkit-appearance:none;appearance:none;}
   .view-btn.active{background:var(--gold);color:#0D0B09;}
 
-  /* ENG CARDS */
   .eng-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:24px;}
   .eng-card{background:var(--surface);border:1px solid var(--border);padding:14px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
   .eng-card.active{background:var(--surface2);border-color:var(--border2);}
@@ -95,7 +88,6 @@
   .eng-card.active .eng-card-name{color:var(--gold);}
   .eng-card-count{font-size:10px;color:var(--muted);font-family:'Cormorant Garamond',serif;font-style:italic;}
 
-  /* STATS — each status has its own clear color */
   .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
   @media(max-width:600px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
   .stat-card{background:var(--surface);border:1px solid var(--border);padding:20px 18px;position:relative;cursor:pointer;transition:all .2s;opacity:0.5;border-left:3px solid transparent;}
@@ -115,17 +107,14 @@
   .stat-card.s-waiting .stat-value{color:var(--status-waiting);}
   .stat-card.s-closed .stat-value{color:var(--status-closed);}
 
-  /* SECTION */
   .section-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px;}
   .section-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;color:var(--gold);letter-spacing:1px;}
   .divider{height:1px;background:linear-gradient(90deg,var(--gold)50,transparent);margin-bottom:18px;}
 
-  /* TABLES */
   .table-section{background:var(--surface);border:1px solid var(--border);overflow:hidden;margin-bottom:20px;}
   .table-header{padding:14px 20px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
   .table-header-title{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500;color:var(--gold);letter-spacing:1px;}
 
-  /* FILTER BAR */
   .filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 20px;background:var(--surface2);border-bottom:1px solid var(--border);}
   .filter-search{background:var(--surface);color:var(--text);border:1px solid var(--border2);padding:6px 12px;font-family:'Jost',sans-serif;font-size:11px;outline:none;width:200px;-webkit-appearance:none;letter-spacing:0.5px;}
   .filter-search::placeholder{color:var(--muted);}
@@ -148,7 +137,6 @@
   tr:last-child td{border-bottom:none;}
   tr:hover td{background:var(--gold-glow);}
 
-  /* STATUS BADGES in table */
   .status-badge{display:inline-block;padding:3px 10px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border:1px solid;}
   .sb-new{color:var(--status-new);border-color:var(--status-new)40;background:var(--status-new)12;}
   .sb-inprogress{color:var(--status-inprogress);border-color:var(--status-inprogress)40;background:var(--status-inprogress)12;}
@@ -178,23 +166,19 @@
   .creation-date .cdate{font-family:'Cormorant Garamond',serif;font-size:13px;color:var(--text2);}
   .creation-date .ctime{font-size:10px;color:var(--muted);}
 
-  /* AVAILABLE TICKETS */
   .avail-section{background:var(--surface);border:1px solid var(--status-unassigned)30;overflow:hidden;margin-bottom:20px;}
   .avail-head{padding:12px 20px;background:var(--status-unassigned)08;border-bottom:1px solid var(--status-unassigned)20;display:flex;align-items:center;justify-content:space-between;}
   .avail-title{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500;color:var(--status-unassigned);letter-spacing:1px;}
 
-  /* LOADING */
   #loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:20px;}
   .spinner{width:34px;height:34px;border:1px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg)}}
   #content{display:none;animation:fadeIn .4s ease;}
   @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
-  /* TOAST */
   #toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);color:var(--gold);border:1px solid var(--border2);padding:12px 20px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1px;transform:translateY(100px);opacity:0;transition:all .3s;z-index:999;}
   #toast.show{transform:translateY(0);opacity:1;}
 
-  /* OVERLAYS */
   .overlay{display:none;position:fixed;inset:0;background:#00000090;z-index:200;align-items:center;justify-content:center;padding:20px;}
   .overlay.show{display:flex;}
   .dialog{background:var(--surface);border:1px solid var(--border2);padding:32px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
@@ -226,13 +210,11 @@
   .type-opt .tlabel{font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:500;color:var(--text2);}
   .type-opt .tsub{font-size:10px;color:var(--muted);margin-top:3px;}
 
-  /* ── ANALYSIS VIEW ── */
   #analysis-view{display:none;}
   .time-toggle{display:flex;gap:7px;margin-bottom:20px;flex-wrap:wrap;}
   .time-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:7px 16px;cursor:pointer;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;-webkit-appearance:none;}
   .time-btn.active{background:var(--gold);color:#0D0B09;border-color:var(--gold);}
 
-  /* KPI cards — each status color */
   .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
   .kpi-card{background:var(--surface);border:1px solid var(--border);padding:18px;text-align:center;border-top:2px solid var(--gold);}
   .kpi-card.kpi-total{border-top-color:var(--gold);}
@@ -253,7 +235,6 @@
   .chart-card{background:var(--surface);border:1px solid var(--border);padding:22px;}
   .chart-card-title{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:500;margin-bottom:18px;color:var(--gold-light);letter-spacing:1px;}
 
-  /* Legend dots for chart clarity */
   .chart-legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;}
   .legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);}
   .legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
@@ -265,11 +246,8 @@
 <div id="pin-screen">
   <div style="text-align:center;">
     <div class="pin-logo">
-      <img
-        src="https://medicadentalservice-sketch.github.io/service-tickets/IMG_8714.jpeg"
-        alt="Medica"
-        onerror="this.style.display='none';document.getElementById('pin-logo-fb').style.display='block';"
-      />
+      <img src="https://medicadentalservice-sketch.github.io/service-tickets/IMG_8714.jpeg" alt="Medica"
+        onerror="this.style.display='none';document.getElementById('pin-logo-fb').style.display='block';"/>
       <div id="pin-logo-fb" class="pin-logo-text">Medica</div>
     </div>
     <div class="pin-tagline">Service Portal</div>
@@ -372,11 +350,8 @@
   <header>
     <div>
       <div class="header-logo">
-        <img
-          src="https://medicadentalservice-sketch.github.io/service-tickets/IMG_8714.jpeg"
-          alt="Medica"
-          onerror="this.style.display='none';document.getElementById('hdr-logo-fb').style.display='block';"
-        />
+        <img src="https://medicadentalservice-sketch.github.io/service-tickets/IMG_8714.jpeg" alt="Medica"
+          onerror="this.style.display='none';document.getElementById('hdr-logo-fb').style.display='block';"/>
         <div id="hdr-logo-fb" class="header-logo-text">Medica</div>
       </div>
       <div class="logo-tagline" id="eng-subtitle">Service Portal</div>
@@ -395,11 +370,8 @@
   </div>
 
   <div id="content">
-
-    <!-- Engineer filter cards (manager) -->
     <div class="eng-cards" id="eng-cards" style="display:none"></div>
 
-    <!-- Stats — each with its own status color -->
     <div class="stats-grid">
       <div class="stat-card s-new active-slice" id="btn-New" onclick="toggleSlice('New')">
         <div class="stat-label">New</div>
@@ -419,7 +391,6 @@
       </div>
     </div>
 
-    <!-- Available tickets -->
     <div class="avail-section" id="new-tickets-section" style="display:none">
       <div class="avail-head">
         <span class="avail-title">Available Tickets</span>
@@ -433,7 +404,6 @@
       </div>
     </div>
 
-    <!-- View toggle (manager) -->
     <div id="view-toggle-section" style="display:none">
       <div class="section-row">
         <div class="section-title" id="section-title">All Tickets</div>
@@ -507,18 +477,17 @@
         <button class="time-btn" onclick="setTimePeriod('all',this)">All Time</button>
       </div>
 
-      <!-- KPI Cards — distinct colors per status -->
       <div class="kpi-grid" id="kpi-grid"></div>
 
       <div class="analysis-grid">
         <div class="chart-card">
           <div class="chart-card-title">Closed vs Active — By Engineer</div>
           <div class="chart-legend" id="legend-ratio"></div>
-          <canvas id="chart-ratio" height="240"></canvas>
+          <canvas id="chart-ratio" height="260"></canvas>
         </div>
         <div class="chart-card">
           <div class="chart-card-title">Ticket Distribution</div>
-          <canvas id="chart-per-eng" height="240"></canvas>
+          <canvas id="chart-per-eng" height="260"></canvas>
         </div>
         <div class="chart-card">
           <div class="chart-card-title">Status Breakdown Per Engineer</div>
@@ -528,7 +497,7 @@
             <div class="legend-item"><div class="legend-dot" style="background:var(--status-waiting)"></div>Waiting</div>
             <div class="legend-item"><div class="legend-dot" style="background:var(--status-closed)"></div>Closed</div>
           </div>
-          <canvas id="chart-status" height="240"></canvas>
+          <canvas id="chart-status" height="260"></canvas>
         </div>
         <div class="chart-card">
           <div class="chart-card-title">Trend Over Time</div>
@@ -536,30 +505,31 @@
             <div class="legend-item"><div class="legend-dot" style="background:var(--status-closed)"></div>Closed</div>
             <div class="legend-item"><div class="legend-dot" style="background:var(--status-inprogress)"></div>Active</div>
           </div>
-          <canvas id="chart-trend" height="240"></canvas>
+          <canvas id="chart-trend" height="260"></canvas>
         </div>
       </div>
     </div>
 
-  </div><!-- end #content -->
-</div><!-- end .container -->
+  </div>
+</div>
 <div id="toast"></div>
 
 <script>
+// Register the datalabels plugin globally
+Chart.register(ChartDataLabels);
+
 const ENG_SCRIPT  = "https://script.google.com/macros/s/AKfycbyd87MSxzZUXwhU6S4R2p-JHNtHew0aMvVYmN59FyRHbEV7wQYr0RvI4Fpyj887Y9N8/exec";
 const CLIENT_SCRIPT = "https://script.google.com/macros/s/AKfycbxa7Qaa0RB6A3cR6rjDqUD-5fj1aoKV1uPPNoX-z1pit5gMNM2bHPmvTOK_nNKUFplTmA/exec";
 
-/* ── ENGINEER COLORS — maximally distinct ── */
 const USERS = {
   "Mohamed Agha": { pin:"1243", color:"#C9A96E", isManager:true,  isIT:false },
-  "Shakeel":      { pin:"1122", color:"#5BA3D9", isManager:false, isIT:true  }, /* blue   */
-  "Sam":          { pin:"1112", color:"#C9A96E", isManager:false, isIT:false }, /* gold   */
-  "Bernard":      { pin:"1212", color:"#E87A3A", isManager:false, isIT:false }, /* orange */
-  "Ghulam":       { pin:"2111", color:"#5DBF8A", isManager:false, isIT:false }, /* green  */
-  "Ahmad":        { pin:"2211", color:"#A97AD9", isManager:false, isIT:false }  /* purple */
+  "Shakeel":      { pin:"1122", color:"#5BA3D9", isManager:false, isIT:true  },
+  "Sam":          { pin:"1112", color:"#C9A96E", isManager:false, isIT:false },
+  "Bernard":      { pin:"1212", color:"#E87A3A", isManager:false, isIT:false },
+  "Ghulam":       { pin:"2111", color:"#5DBF8A", isManager:false, isIT:false },
+  "Ahmad":        { pin:"2211", color:"#A97AD9", isManager:false, isIT:false }
 };
 
-/* ── STATUS COLORS — same as CSS vars ── */
 const STATUS_COLORS = {
   'New':        '#5BA3D9',
   'In Progress':'#E8C84A',
@@ -583,7 +553,6 @@ let charts={};
 let currentView='table';
 let sortCol='created', sortDir='desc';
 
-/* ── FORMAT DATE ── */
 function formatCreated(ts){
   if(!ts) return {date:'—',time:''};
   const d = new Date(ts);
@@ -593,7 +562,6 @@ function formatCreated(ts){
   return {date,time};
 }
 
-/* ── PIN ── */
 function pinPress(d){ if(pinBuffer.length>=4)return; pinBuffer+=d; updateDots(); if(pinBuffer.length===4)setTimeout(checkPin,120); }
 function pinDelete(){ pinBuffer=pinBuffer.slice(0,-1); updateDots(); document.getElementById('pin-error').innerText=''; }
 function updateDots(){
@@ -648,7 +616,6 @@ window.onload=()=>{
   if(n&&p&&USERS[n]&&USERS[n].pin===p){ MY_NAME=n; pinBuffer=p; unlockDashboard(); }
 };
 
-/* ── VIEW TOGGLE ── */
 function switchView(view){
   currentView=view;
   document.getElementById('table-view').style.display=view==='table'?'block':'none';
@@ -658,14 +625,12 @@ function switchView(view){
   if(view==='analysis') renderAllCharts();
 }
 
-/* ── TOAST ── */
 function showToast(msg,color){
   const t=document.getElementById('toast');
   t.innerText=msg; t.style.color=color||'var(--gold)';
   t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000);
 }
 
-/* ── CONFIRM ── */
 function showConfirm(title,msg,cb){
   document.getElementById('confirm-title').innerText=title;
   document.getElementById('confirm-msg').innerText=msg;
@@ -675,7 +640,6 @@ function showConfirm(title,msg,cb){
 function confirmYes(){ document.getElementById('confirm-overlay').classList.remove('show'); if(pendingConfirm){pendingConfirm();pendingConfirm=null;} }
 function confirmNo(){ document.getElementById('confirm-overlay').classList.remove('show'); pendingConfirm=null; refreshUI(); }
 
-/* ── JSONP ── */
 function fetchJSONP(url){
   return new Promise((resolve,reject)=>{
     const cbName='cb_'+Math.random().toString(36).substr(2,9);
@@ -688,7 +652,6 @@ function fetchJSONP(url){
   });
 }
 
-/* ── LOAD DATA ── */
 async function loadData(){
   const btn=document.getElementById('rbtn');
   btn.style.opacity='0.4'; btn.innerText='Loading...';
@@ -751,7 +714,6 @@ function calculateDuration(start,end){
   return d>0?`${d}d ${h%24}h`:`${h}h`;
 }
 
-/* ── SORT ── */
 function sortTable(col){
   if(sortCol===col){ sortDir=sortDir==='asc'?'desc':'asc'; }
   else{ sortCol=col; sortDir=col==='created'?'desc':'asc'; }
@@ -774,7 +736,6 @@ function getSortValue(r,col){
   }
 }
 
-/* ── FILTERS ── */
 function applyFilters(){
   const search=(document.getElementById('search-input').value||'').toLowerCase().trim();
   const statusF=document.getElementById('filter-status').value;
@@ -843,7 +804,6 @@ function clearFilters(){
   applyFilters();
 }
 
-/* ── ENG CARDS ── */
 function renderEngCards(){
   const grid=document.getElementById('eng-cards');
   const cards=[{name:'all',color:'#C9A96E',label:'All Team'},...ENG_LIST.map(n=>({name:n,color:USERS[n].color,label:n}))];
@@ -862,7 +822,6 @@ function filterByEng(name){
   applyFilters(); renderEngCards(); updateStats();
 }
 
-/* ── STATS ── */
 function updateStats(){
   const c={closed:0,open:0,inprogress:0,waiting:0};
   myTickets.forEach(r=>{
@@ -884,7 +843,6 @@ function toggleSlice(status){
   applyFilters();
 }
 
-/* ── CLAIM ── */
 async function claimTicket(timestamp,btnEl){
   btnEl.disabled=true; btnEl.innerText='Claiming...';
   try{
@@ -894,7 +852,6 @@ async function claimTicket(timestamp,btnEl){
   }catch(e){ showToast('Error','var(--danger)'); btnEl.disabled=false; btnEl.innerText='Claim'; }
 }
 
-/* ── ASSIGN ── */
 async function assignTicket(realIdx,selectEl,btnEl){
   const selected=selectEl.value;
   if(!selected){ showToast('Select an option','var(--danger)'); return; }
@@ -915,7 +872,6 @@ async function assignTicket(realIdx,selectEl,btnEl){
   }
 }
 
-/* ── STATUS UPDATE ── */
 function updateStatus(idx,newStatus,selectEl){
   const ticket=filteredTickets[idx];
   const myIdx=myTickets.indexOf(ticket);
@@ -931,7 +887,6 @@ function updateStatus(idx,newStatus,selectEl){
   });
 }
 
-/* ── SPARE PARTS ── */
 async function saveSpareParts(idx,inputEl,btnEl){
   const parts=inputEl.value.trim();
   if(!parts){ showToast('Enter spare parts','var(--danger)'); return; }
@@ -944,7 +899,6 @@ async function saveSpareParts(idx,inputEl,btnEl){
   }catch(e){ showToast('Error','var(--danger)'); loadData(); }
 }
 
-/* ── DELETE ── */
 function deleteTicket(realIdx){
   const ticket=allData[realIdx];
   const timestamp=getVal(ticket,'Timestamp');
@@ -955,7 +909,6 @@ function deleteTicket(realIdx){
   });
 }
 
-/* ── EDIT ── */
 function editTicket(realIdx){
   const ticket=allData[realIdx];
   editingTimestamp=getVal(ticket,'Timestamp');
@@ -973,7 +926,6 @@ function editTicket(realIdx){
   document.getElementById('ticket-overlay').classList.add('show');
 }
 
-/* ── ADD MODAL ── */
 function openTicketModal(){
   editingTimestamp=null;
   const u=USERS[MY_NAME];
@@ -1045,7 +997,6 @@ async function submitTicket(){
   btn.disabled=false; btn.innerText=editingTimestamp?'Save Changes':'Add Ticket';
 }
 
-/* ── RENDER NEW TICKETS ── */
 function renderNewTickets(){
   const tbody=document.getElementById('tbody-new');
   if(!tbody) return;
@@ -1076,7 +1027,6 @@ function renderNewTickets(){
   }).join('');
 }
 
-/* ── STATUS BADGE HELPER ── */
 function statusBadge(statusVal){
   const s=statusVal.toLowerCase();
   let cls='sb-new', label=statusVal;
@@ -1087,7 +1037,6 @@ function statusBadge(statusVal){
   return `<span class="status-badge ${cls}">${label}</span>`;
 }
 
-/* ── RENDER MY TICKETS ── */
 function renderMyTickets(){
   const isManager=USERS[MY_NAME]?.isManager;
   const tbody=document.getElementById('tbody-mine');
@@ -1114,17 +1063,14 @@ function renderMyTickets(){
     const {date,time}=formatCreated(ts);
 
     const typeBadge=ticketType?`<span class="type-badge ${isIT?'type-it':'type-hw'}">${isIT?'IT':'HW'}</span>`:'—';
-
     const contactCell=`<div class="client-info">
       ${contact?`<span class="cname">${contact}</span>`:'<span style="color:var(--muted)">—</span>'}
       ${phone?`<a class="phone" href="tel:${phone}">${phone}</a>`:''}
       ${loc?`<span class="clocation">📍 ${loc}</span>`:''}
     </div>`;
-
     const statusCell=`<select class="status-select" onchange="updateStatus(${i},this.value,this)">
       ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${statusVal===s?'selected':''}>${s==='Waiting'?'Waiting — Spare Parts':s}</option>`).join('')}
     </select>`;
-
     const spareCell=isWaiting
       ?`<div class="spare-wrap">
           ${spareParts?`<span class="spare-text">↳ ${spareParts}</span>`:''}
@@ -1132,7 +1078,6 @@ function renderMyTickets(){
           <button class="save-btn" id="sbtn-${i}" onclick="saveSpareParts(${i},document.getElementById('spare-${i}'),document.getElementById('sbtn-${i}'))">Save</button>
         </div>`
       :`<span style="color:var(--muted);font-size:11px">${spareParts?'↳ '+spareParts:'—'}</span>`;
-
     const createdCell=`<div class="creation-date">
       <span class="cdate">${date}</span>
       <span class="ctime">${time}</span>
@@ -1211,7 +1156,7 @@ function renderAllCharts(){
   const gridColor='#C9A96E15';
   const so={ ticks:{color:'#C9B99A',font:{size:11}}, grid:{color:gridColor} };
 
-  /* KPI CARDS */
+  /* ── KPI CARDS ── */
   const total=data.length;
   const closed=data.filter(r=>getStatus(r).toLowerCase().includes('closed')).length;
   const inprog=data.filter(r=>getStatus(r).toLowerCase().includes('in progress')).length;
@@ -1225,10 +1170,19 @@ function renderAllCharts(){
     <div class="kpi-card kpi-rate"><div class="kpi-value">${closeRate}%</div><div class="kpi-label">Close Rate</div></div>
   `;
 
-  /* CHART 1 — Closed vs Active per engineer — each bar = engineer color */
+  /* ── SHARED DATALABEL STYLES ── */
+  // For bar charts: show "Name\nCount" above each bar group (per engineer)
+  const barTopLabelPlugin = {
+    // We handle this via datalabels on the last visible dataset
+  };
+
+  /* ── CHART 1: Closed vs Active per engineer ── */
   destroyChart('ratio');
   const legend=document.getElementById('legend-ratio');
   if(legend) legend.innerHTML=ENG_LIST.map(n=>`<div class="legend-item"><div class="legend-dot" style="background:${USERS[n].color}"></div>${n}</div>`).join('');
+
+  const ratioClosedData = ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&getStatus(r).toLowerCase().includes('closed')).length);
+  const ratioActiveData = ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&!getStatus(r).toLowerCase().includes('closed')).length);
 
   charts['ratio']=new Chart(document.getElementById('chart-ratio').getContext('2d'),{
     type:'bar',
@@ -1237,32 +1191,46 @@ function renderAllCharts(){
       datasets:[
         {
           label:'Closed',
-          data:ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&getStatus(r).toLowerCase().includes('closed')).length),
-          /* solid fill = engineer's distinct color */
+          data:ratioClosedData,
           backgroundColor:ENG_COLORS.map(c=>c+'CC'),
           borderColor:ENG_COLORS,
           borderWidth:1,
-          borderRadius:3
+          borderRadius:3,
+          datalabels:{ display:false }
         },
         {
           label:'Active',
-          data:ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&!getStatus(r).toLowerCase().includes('closed')).length),
-          /* hatched = lighter version */
+          data:ratioActiveData,
           backgroundColor:ENG_COLORS.map(c=>c+'33'),
           borderColor:ENG_COLORS.map(c=>c+'99'),
           borderWidth:1,
           borderRadius:3,
-          borderDash:[4,2]
+          // Show "Name: total" label above the Active (top) bar
+          datalabels:{
+            display: true,
+            anchor: 'end',
+            align: 'top',
+            offset: 2,
+            color: '#E8D5B0',
+            font: { size: 10, weight: '500', family:"'Jost', sans-serif" },
+            formatter: (value, ctx) => {
+              const name = ENG_LIST[ctx.dataIndex];
+              const total = ratioClosedData[ctx.dataIndex] + ratioActiveData[ctx.dataIndex];
+              return total > 0 ? `${name}\n${total}` : '';
+            }
+          }
         }
       ]
     },
     options:{
       responsive:true,
+      layout:{ padding:{ top: 36 } },
       plugins:{
+        datalabels:{}, // activated per-dataset above
         legend:{
           labels:{
             color:'#C9B99A',font:{size:11},
-            generateLabels:(chart)=>[
+            generateLabels:()=>[
               {text:'Closed (solid)',fillStyle:'#C9A96ECC',strokeStyle:'#C9A96E',lineWidth:1},
               {text:'Active (light)',fillStyle:'#C9A96E33',strokeStyle:'#C9A96E99',lineWidth:1}
             ]
@@ -1273,29 +1241,50 @@ function renderAllCharts(){
     }
   });
 
-  /* CHART 2 — Donut — each engineer a clearly distinct color */
+  /* ── CHART 2: Donut — Ticket Distribution ── */
   destroyChart('per-eng');
+  const donutData = ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n).length);
   charts['per-eng']=new Chart(document.getElementById('chart-per-eng').getContext('2d'),{
     type:'doughnut',
     data:{
       labels:ENG_LIST,
       datasets:[{
-        data:ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n).length),
+        data:donutData,
         backgroundColor:['#5BA3D9BB','#C9A96EBB','#E87A3ABB','#5DBF8ABB','#A97AD9BB'],
         borderColor:    ['#5BA3D9',  '#C9A96E',  '#E87A3A',  '#5DBF8A',  '#A97AD9'],
         borderWidth:2,
-        hoverOffset:8
+        hoverOffset:8,
+        datalabels:{
+          display: ctx => donutData[ctx.dataIndex] > 0,
+          color: '#F5EDD8',
+          font: { size: 11, weight: '500', family:"'Jost', sans-serif" },
+          textAlign: 'center',
+          formatter: (value, ctx) => {
+            const name = ENG_LIST[ctx.dataIndex];
+            return `${name}\n${value}`;
+          }
+        }
       }]
     },
     options:{
       responsive:true,
-      plugins:{legend:{labels:{color:'#C9B99A',font:{size:11},padding:16}}},
-      cutout:'60%'
+      layout:{ padding: 20 },
+      plugins:{
+        datalabels:{},
+        legend:{labels:{color:'#C9B99A',font:{size:11},padding:16}}
+      },
+      cutout:'55%'
     }
   });
 
-  /* CHART 3 — Status breakdown stacked — each status its own high-contrast color */
+  /* ── CHART 3: Status Breakdown Stacked ── */
   destroyChart('status');
+  const statusNewData     = ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&(getStatus(r).toLowerCase()==='new'||getStatus(r)==='') ).length);
+  const statusInProgData  = ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&getStatus(r).toLowerCase().includes('in progress')).length);
+  const statusWaitingData = ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&getStatus(r).toLowerCase().includes('waiting')).length);
+  const statusClosedData  = ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&getStatus(r).toLowerCase().includes('closed')).length);
+  const statusTotals      = ENG_LIST.map((_,i)=>statusNewData[i]+statusInProgData[i]+statusWaitingData[i]+statusClosedData[i]);
+
   charts['status']=new Chart(document.getElementById('chart-status').getContext('2d'),{
     type:'bar',
     data:{
@@ -1303,29 +1292,50 @@ function renderAllCharts(){
       datasets:[
         {
           label:'New',
-          data:ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&(getStatus(r).toLowerCase()==='new'||getStatus(r)==='') ).length),
-          backgroundColor:'#5BA3D9BB', borderColor:'#5BA3D9', borderWidth:1, borderRadius:2
+          data:statusNewData,
+          backgroundColor:'#5BA3D9BB', borderColor:'#5BA3D9', borderWidth:1, borderRadius:2,
+          datalabels:{ display:false }
         },
         {
           label:'In Progress',
-          data:ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&getStatus(r).toLowerCase().includes('in progress')).length),
-          backgroundColor:'#E8C84ABB', borderColor:'#E8C84A', borderWidth:1, borderRadius:2
+          data:statusInProgData,
+          backgroundColor:'#E8C84ABB', borderColor:'#E8C84A', borderWidth:1, borderRadius:2,
+          datalabels:{ display:false }
         },
         {
           label:'Waiting',
-          data:ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&getStatus(r).toLowerCase().includes('waiting')).length),
-          backgroundColor:'#E87A3ABB', borderColor:'#E87A3A', borderWidth:1, borderRadius:2
+          data:statusWaitingData,
+          backgroundColor:'#E87A3ABB', borderColor:'#E87A3A', borderWidth:1, borderRadius:2,
+          datalabels:{ display:false }
         },
         {
           label:'Closed',
-          data:ENG_LIST.map(n=>data.filter(r=>getVal(r,'Name')===n&&getStatus(r).toLowerCase().includes('closed')).length),
-          backgroundColor:'#5DBF8ABB', borderColor:'#5DBF8A', borderWidth:1, borderRadius:2
+          data:statusClosedData,
+          backgroundColor:'#5DBF8ABB', borderColor:'#5DBF8A', borderWidth:1, borderRadius:2,
+          // Top dataset in the stack — show "Name\nTotal" above
+          datalabels:{
+            display: true,
+            anchor: 'end',
+            align: 'top',
+            offset: 2,
+            color: '#E8D5B0',
+            font: { size: 10, weight: '500', family:"'Jost', sans-serif" },
+            formatter: (value, ctx) => {
+              const name = ENG_LIST[ctx.dataIndex];
+              const total = statusTotals[ctx.dataIndex];
+              return total > 0 ? `${name}\n${total}` : '';
+            }
+          }
         }
       ]
     },
     options:{
       responsive:true,
-      plugins:{legend:{labels:{color:'#C9B99A',font:{size:11},padding:14}}},
+      layout:{ padding:{ top: 36 } },
+      plugins:{
+        datalabels:{},
+        legend:{labels:{color:'#C9B99A',font:{size:11},padding:14}}
+      },
       scales:{
         x:{...so,stacked:true},
         y:{...so,stacked:true,beginAtZero:true}
@@ -1333,7 +1343,7 @@ function renderAllCharts(){
     }
   });
 
-  /* CHART 4 — Trend line — closed=green, active=amber */
+  /* ── CHART 4: Trend Line ── */
   destroyChart('trend');
   const sorted=[...data].sort((a,b)=>new Date(a['Timestamp'])-new Date(b['Timestamp']));
   const weeks={};
@@ -1358,7 +1368,16 @@ function renderAllCharts(){
           backgroundColor:'#5DBF8A20',
           fill:true,tension:0.4,
           pointBackgroundColor:'#5DBF8A',
-          pointRadius:4,borderWidth:2
+          pointRadius:4,borderWidth:2,
+          datalabels:{
+            display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+            anchor: 'top',
+            align: 'top',
+            offset: 4,
+            color: '#5DBF8A',
+            font: { size: 10, family:"'Jost', sans-serif" },
+            formatter: v => v
+          }
         },
         {
           label:'Active',
@@ -1367,13 +1386,26 @@ function renderAllCharts(){
           backgroundColor:'#E8C84A15',
           fill:true,tension:0.4,
           pointBackgroundColor:'#E8C84A',
-          pointRadius:4,borderWidth:2
+          pointRadius:4,borderWidth:2,
+          datalabels:{
+            display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+            anchor: 'top',
+            align: 'top',
+            offset: 4,
+            color: '#E8C84A',
+            font: { size: 10, family:"'Jost', sans-serif" },
+            formatter: v => v
+          }
         }
       ]
     },
     options:{
       responsive:true,
-      plugins:{legend:{labels:{color:'#C9B99A',font:{size:11},padding:14}}},
+      layout:{ padding:{ top: 20 } },
+      plugins:{
+        datalabels:{},
+        legend:{labels:{color:'#C9B99A',font:{size:11},padding:14}}
+      },
       scales:{x:so,y:{...so,beginAtZero:true}}
     }
   });
