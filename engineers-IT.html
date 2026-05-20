@@ -472,9 +472,12 @@
     <!-- ANALYSIS VIEW -->
     <div id="analysis-view">
       <div class="time-toggle">
-        <button class="time-btn active" onclick="setTimePeriod('week',this)">This Week</button>
-        <button class="time-btn" onclick="setTimePeriod('month',this)">This Month</button>
-        <button class="time-btn" onclick="setTimePeriod('all',this)">All Time</button>
+        <button class="time-btn active" id="tbtn-week" onclick="setTimePeriod('week',this)">This Week</button>
+        <button class="time-btn" id="tbtn-month" onclick="setTimePeriod('month',this)">This Month</button>
+        <button class="time-btn" id="tbtn-all" onclick="setTimePeriod('all',this)">All Time</button>
+        <select id="month-select" onchange="setMonthFilter(this)" style="background:var(--surface);color:var(--text2);border:1px solid var(--border2);padding:7px 12px;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;outline:none;">
+          <option value="">— By Month —</option>
+        </select>
       </div>
 
       <div class="kpi-grid" id="kpi-grid"></div>
@@ -702,6 +705,7 @@ async function loadData(){
 function refreshUI(){
   if(USERS[MY_NAME]?.isManager) renderEngCards();
   updateStats(); renderNewTickets(); applyFilters();
+  populateMonthDropdown();
   if(currentView==='analysis') renderAllCharts();
 }
 
@@ -1131,21 +1135,99 @@ function renderMyTickets(){
 }
 
 /* ── CHARTS ── */
+let currentMonthFilter='';
+
 function getFilteredData(){
   const now=new Date();
   return allData.filter(r=>{
-    if(currentTimePeriod==='all') return true;
     const ts=new Date(getVal(r,'Timestamp'));
     if(isNaN(ts)) return false;
+    if(currentMonthFilter){
+      // Quarter filter: e.g. "Q1-2025"
+      if(currentMonthFilter.startsWith('Q')){
+        const [q,yr]=currentMonthFilter.split('-');
+        const qNum=parseInt(q[1]);
+        const startMonth=(qNum-1)*3; // Q1=0, Q2=3, Q3=6, Q4=9
+        return ts.getFullYear()===parseInt(yr) && ts.getMonth()>=startMonth && ts.getMonth()<startMonth+3;
+      }
+      // Month filter: e.g. "2025-04"
+      const key=ts.getFullYear()+'-'+String(ts.getMonth()+1).padStart(2,'0');
+      return key===currentMonthFilter;
+    }
+    if(currentTimePeriod==='all') return true;
     const diff=(now-ts)/(1000*60*60*24);
     return currentTimePeriod==='week'?diff<=7:diff<=30;
   });
 }
 function setTimePeriod(p,btn){
   currentTimePeriod=p;
+  currentMonthFilter='';
+  const sel=document.getElementById('month-select');
+  if(sel) sel.value='';
   document.querySelectorAll('.time-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderAllCharts();
+}
+function setMonthFilter(sel){
+  currentMonthFilter=sel.value;
+  if(currentMonthFilter){
+    document.querySelectorAll('.time-btn').forEach(b=>b.classList.remove('active'));
+  } else {
+    currentTimePeriod='all';
+    const allBtn=document.getElementById('tbtn-all');
+    if(allBtn) allBtn.classList.add('active');
+  }
+  renderAllCharts();
+}
+function populateMonthDropdown(){
+  const sel=document.getElementById('month-select');
+  if(!sel) return;
+  const seenMonths=new Set();
+  const seenYears=new Set();
+  allData.forEach(r=>{
+    const ts=new Date(getVal(r,'Timestamp'));
+    if(!isNaN(ts)){
+      const key=ts.getFullYear()+'-'+String(ts.getMonth()+1).padStart(2,'0');
+      seenMonths.add(key);
+      seenYears.add(ts.getFullYear());
+    }
+  });
+  const sortedMonths=[...seenMonths].sort((a,b)=>b.localeCompare(a));
+  const sortedYears=[...seenYears].sort((a,b)=>b-a);
+
+  sel.innerHTML='<option value="">— By Period —</option>';
+
+  // Add quarters per year (only if that year has data)
+  sortedYears.forEach(yr=>{
+    const qGrp=document.createElement('optgroup');
+    qGrp.label=`── ${yr} Quarters ──`;
+    [1,2,3,4].forEach(q=>{
+      const startMonth=(q-1)*3;
+      const hasData=sortedMonths.some(k=>{
+        const [y,m]=k.split('-');
+        return parseInt(y)===yr && parseInt(m)-1>=startMonth && parseInt(m)-1<startMonth+3;
+      });
+      if(hasData){
+        const opt=document.createElement('option');
+        opt.value=`Q${q}-${yr}`;
+        opt.textContent=`Q${q} ${yr} (${['Jan–Mar','Apr–Jun','Jul–Sep','Oct–Dec'][q-1]})`;
+        qGrp.appendChild(opt);
+      }
+    });
+    if(qGrp.children.length) sel.appendChild(qGrp);
+  });
+
+  // Add individual months
+  const mGrp=document.createElement('optgroup');
+  mGrp.label='── Months ──';
+  sortedMonths.forEach(key=>{
+    const [yr,mo]=key.split('-');
+    const label=new Date(yr,mo-1,1).toLocaleString('default',{month:'long',year:'numeric'});
+    const opt=document.createElement('option');
+    opt.value=key; opt.textContent=label;
+    mGrp.appendChild(opt);
+  });
+  if(mGrp.children.length) sel.appendChild(mGrp);
 }
 function destroyChart(id){ if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
 
